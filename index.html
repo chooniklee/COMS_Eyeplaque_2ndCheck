@@ -83,37 +83,29 @@
                 <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex-1">
                     <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
                         <h3 class="text-xs font-bold text-gray-800 uppercase">Parameters</h3>
-                        <!-- Calc Mode Toggle -->
-                        <div class="flex bg-gray-100 rounded p-0.5">
-                             <button id="mode-calc-fwd" class="px-2 py-0.5 text-[10px] font-bold rounded shadow bg-white text-blue-800 transition-all">Input Activity</button>
-                             <button id="mode-calc-bwd" class="px-2 py-0.5 text-[10px] font-bold rounded text-gray-400 hover:text-gray-600 transition-all">Input Dose</button>
-                        </div>
+                        <!-- Reset Button with Icon -->
+                        <button id="btn-reset" class="flex items-center text-[12px] font-bold text-gray-500 hover:text-red-600 transition-colors focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Reset
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-x-3 gap-y-3">
-                        <!-- Dynamic Activity/Dose Input Section -->
-                        <div class="col-span-2">
-                            <!-- Forward Mode: Input Activity -->
-                            <div id="input-group-activity" class="block">
-                                <label class="block text-[12px] font-semibold text-gray-600 mb-1">IAI-125A Activity (U/seed)</label>
-                                <input type="number" id="seedActivity" step="0.01" value="0.00" class="w-full px-2 py-1.5 text-sm font-bold text-red-700 border border-red-200 bg-red-50/50 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
-                            </div>
-                            
-                            <!-- Backward Mode: Input Target Dose -->
-                            <div id="input-group-dose" class="hidden">
-                                 <label class="block text-[12px] font-semibold text-gray-600 mb-1">Target Rx Dose (Gy)</label>
-                                 <div class="flex gap-2 items-stretch">
-                                     <input type="number" id="targetDoseInput" step="1.0" value="85.0" class="w-1/2 px-2 py-1.5 text-sm font-bold text-green-700 border border-green-200 bg-green-50 rounded-md focus:ring-2 focus:ring-green-500 outline-none">
-                                     <div class="w-1/2 bg-gray-50 border border-gray-200 rounded px-2 py-0.5 flex flex-col justify-center items-center">
-                                         <span class="text-[9px] text-gray-400 uppercase leading-none mb-0.5">Needs</span>
-                                         <span class="text-sm font-bold text-red-600 leading-none truncate w-full text-center" id="calculatedActivityDisplay">-- U</span>
-                                     </div>
-                                 </div>
-                            </div>
+                        <!-- Rx Dose (Gy) and Activity (U/seed) -->
+                        <div class="col-span-1">
+                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Dose (Gy)</label>
+                            <input type="number" id="targetDoseInput" step="1.0" value="85.0" class="w-full px-2 py-1.5 text-sm font-bold text-green-700 border border-green-200 bg-green-50 rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Activity (U/seed)</label>
+                            <input type="number" id="seedActivity" step="0.01" value="0.00" class="w-full px-2 py-1.5 text-sm font-bold text-red-700 border border-red-200 bg-red-50/50 rounded-md focus:ring-2 focus:ring-red-500 outline-none transition-all">
                         </div>
 
+                        <!-- Other Parameters -->
                         <div>
-                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx depth (mm)</label>
+                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Depth (mm)</label>
                             <input type="number" id="tumorHeight" step="0.1" value="5.0" class="w-full px-2 py-1.5 text-sm border rounded-md">
                         </div>
                         <div>
@@ -182,8 +174,8 @@
                             <div class="flex flex-col">
                                 <span class="text-[10px] text-green-800 font-bold uppercase mb-1">Prescription (Rx) Summary</span>
                                 <div class="flex justify-between items-baseline bg-white/40 p-2 rounded-lg border border-green-200">
-                                    <div class="text-sm text-green-900 font-bold">Rx Depth <span class="text-xs font-normal opacity-70" id="dose-apex-label">(5mm)</span></div>
-                                    <div class="text-3xl font-black text-green-950"><span id="dose-apex">0.00</span><span class="text-sm font-normal ml-1">Gy</span></div>
+                                    <div class="text-sm text-green-900 font-bold">Rx Point <span class="text-xs font-normal opacity-70" id="dose-rx-label">(5mm)</span></div>
+                                    <div class="text-3xl font-black text-green-950"><span id="dose-rx">0.00</span><span class="text-sm font-normal ml-1">Gy</span></div>
                                 </div>
                             </div>
                         </div>
@@ -201,7 +193,6 @@
                     <!-- Unified Header for Visualization -->
                     <div class="bg-gray-100 border-b border-gray-200 py-2 px-4 shrink-0 flex flex-col items-center">
                         <h3 class="text-xs font-bold text-gray-700 uppercase text-center" id="plaque-desc-label">Plaque Geometry</h3>
-     
                     </div>
                     
                     <div class="p-4 flex flex-col flex-1 justify-center items-center">
@@ -221,7 +212,7 @@
         <!-- Detailed Physics Breakdown Table -->
         <div id="detailedTableContainer" class="hidden mt-6 border rounded-lg overflow-hidden shadow-md">
             <div class="bg-gray-100 px-4 py-3 border-b">
-                <h3 class="text-sm font-bold text-gray-700">Detailed Physics Check: Rx Depth</h3>
+                <h3 class="text-sm font-bold text-gray-700">Detailed Physics Check: Rx Point</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-xs text-center">
@@ -242,7 +233,7 @@
                     <tbody id="detailedTableBody" class="divide-y divide-gray-100 bg-white"></tbody>
                     <tfoot class="bg-gray-50 font-bold text-gray-800">
                         <tr>
-                            <td colspan="9" class="py-3 px-3 text-right text-sm">Total Dose @ Rx Depth:</td>
+                            <td colspan="9" class="py-3 px-3 text-right text-sm">Total Dose @ Rx Point:</td>
                             <td class="py-3 px-3 border-t border-gray-300 text-sm" id="detailedTableTotal">0.0000 Gy</td>
                         </tr>
                     </tfoot>
@@ -295,10 +286,10 @@
         const state = {
             size: 16, isNotched: false, calcMode: 'line', inputMode: 'duration',
             duration: 101.0, tumorHeight: 5.0, seedActivity: 0.00, showTable: false,
-            // New state for back-calc
-            calcDirection: 'forward', // 'forward' | 'backward'
+            // 기본 Rx Dose를 85로 설정하고 Driver를 'dose'로 시작하여 초기 계산 수행
+            calcDriver: 'dose', 
             targetDose: 85.0,
-            tpsValues: { ext_sclera: 0, sclera: 0, coms_5mm: 0, eye_origin: 0, opp_retina: 0, apex: 0 }
+            tpsValues: { ext_sclera: 0, sclera: 0, coms_5mm: 0, eye_origin: 0, opp_retina: 0, rx: 0 }
         };
 
         // --- GLOBAL DOM REFS (Initialized in init) ---
@@ -356,57 +347,44 @@
 
         // --- CALCULATIONS ---
         function calculateAll() {
-            if (!el.doseApex || state.duration < 0) return;
+            if (!el.doseRx || state.duration < 0) return;
             const lambda = Math.LN2 / (ISOTOPE_CONSTANTS.HalfLife * 24.0);
             const df = (state.duration > 0) ? (1 - Math.exp(-lambda * state.duration)) / lambda : 0;
             const gref = state.calcMode === 'point' ? 1 : G_REF_L;
             const { active } = getProcessedSeeds();
             
-            // --- BACKWARD CALCULATION LOGIC ---
-            if (state.calcDirection === 'backward') {
-                if (df <= 0) {
-                    // Cannot calc activity if duration is 0
-                    el.calculatedActivityDisplay.textContent = "Inf";
-                    return;
-                }
-                
-                // 1. Calculate Geometry Factor Sum at Apex
-                const apex_pt = { x: 0, y: 0, z: state.tumorHeight / 10 };
-                let apex_geom_sum = 0;
-                
-                active.forEach(s => {
-                    const r = Math.sqrt((apex_pt.x - s.x/10)**2 + (apex_pt.y - s.y/10)**2 + (apex_pt.z - s.z/10)**2);
-                    const g = calculate_g(r);
-                    let G, F;
-                    if (state.calcMode === 'point') { G = 1/r**2; F = 1; }
-                    else { G = calculate_G_line(r, apex_pt, s); F = get_F(r, get_Theta_Deg(r, apex_pt, s)); }
-                    apex_geom_sum += (ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F);
-                });
-                
-                // 2. Solve for Activity: Dose = (Activity * GeomSum * df) / 100
-                //    Activity = (Dose * 100) / (GeomSum * df)
-                if (apex_geom_sum > 0) {
-                    const requiredAct = (state.targetDose * 100.0) / (apex_geom_sum * df);
+            const rx_pt = { x: 0, y: 0, z: state.tumorHeight / 10 };
+            let rx_geom_sum = 0;
+            
+            active.forEach(s => {
+                const r = Math.sqrt((rx_pt.x - s.x/10)**2 + (rx_pt.y - s.y/10)**2 + (rx_pt.z - s.z/10)**2);
+                const g = calculate_g(r);
+                let G, F;
+                if (state.calcMode === 'point') { G = 1/r**2; F = 1; }
+                else { G = calculate_G_line(r, rx_pt, s); F = get_F(r, get_Theta_Deg(r, rx_pt, s)); }
+                rx_geom_sum += (ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F);
+            });
+
+            if (state.calcDriver === 'dose') {
+                if (df > 0 && rx_geom_sum > 0) {
+                    const requiredAct = (state.targetDose * 100.0) / (rx_geom_sum * df);
                     state.seedActivity = requiredAct;
-                    el.calculatedActivityDisplay.textContent = requiredAct.toFixed(3) + " U";
-                    // Update the hidden activity input so if they toggle back, it's correct
                     el.seedActivity.value = requiredAct.toFixed(3);
                 } else {
-                    el.calculatedActivityDisplay.textContent = "Err";
+                    state.seedActivity = 0;
+                    el.seedActivity.value = "0.00";
                 }
             } else {
-                // Forward mode: Update seedActivity from input, ensure no negative
                 state.seedActivity = Math.max(0, parseFloat(el.seedActivity.value) || 0);
             }
 
-            // --- FORWARD PASS (For all points) ---
             const pts_coords = { 
                 ext_sclera: { x: 0, y: 0, z: -0.1 }, 
                 sclera: { x: 0, y: 0, z: 0 }, 
                 coms_5mm: { x: 0, y: 0, z: 0.5 }, 
                 eye_origin: { x: 0, y: 0, z: 1.1 }, 
                 opp_retina: { x: 0, y: 0, z: 2.2 }, 
-                apex: { x: 0, y: 0, z: state.tumorHeight / 10 } 
+                rx: { x: 0, y: 0, z: state.tumorHeight / 10 } 
             };
             
             const res = {};
@@ -423,10 +401,15 @@
                 res[k] = dose;
             }
             
-            el.doseApex.textContent = res.apex.toFixed(2);
-            el.doseApexLabel.textContent = `(${state.tumorHeight}mm)`;
+            if (state.calcDriver === 'activity') {
+                state.targetDose = res.rx;
+                el.targetDoseInput.value = res.rx.toFixed(1);
+            }
+
+            el.doseRx.textContent = res.rx.toFixed(2);
+            el.doseRxLabel.textContent = `(${state.tumorHeight}mm)`;
             updateTableDisplay(res);
-            renderPhysicsTable(active, pts_coords.apex, gref, df);
+            renderPhysicsTable(active, pts_coords.rx, gref, df);
         }
 
         function updateTableDisplay(results) {
@@ -436,7 +419,7 @@
                 { id: 'coms_5mm', name: 'COMS Reference (5mm)' },
                 { id: 'eye_origin', name: 'Eye Origin (11mm)' },
                 { id: 'opp_retina', name: 'Opposite Retina (22mm)' },
-                { id: 'apex', name: 'Rx Depth (Apex)' }
+                { id: 'rx', name: 'Rx Point' }
             ];
             el.comparisonRows.innerHTML = pts.map(pt => `
                 <tr class="hover:bg-green-100/30 transition-colors">
@@ -479,6 +462,40 @@
             el.tableBody.innerHTML = html; el.tableTotal.textContent = total.toFixed(4) + " Gy";
         }
 
+        // --- RESET FUNCTION ---
+        function resetApp() {
+            state.size = 16;
+            state.isNotched = false;
+            state.calcMode = 'line';
+            state.duration = 101.0;
+            state.tumorHeight = 5.0;
+            state.seedActivity = 0.00;
+            state.targetDose = 85.0; // Reset to 85.0
+            state.calcDriver = 'dose'; // Ensure it recalculates Activity from Dose on reset
+            Object.keys(state.tpsValues).forEach(k => state.tpsValues[k] = 0);
+
+            el.manualDuration.value = "101.0";
+            el.seedActivity.value = "0.00";
+            el.targetDoseInput.value = "85.0";
+            el.tumorHeight.value = "5.0";
+            el.plaqueSize.value = "16";
+            
+            document.querySelector('input[name="shape"][value="round"]').checked = true;
+            document.querySelector('input[name="calcMode"][value="line"]').checked = true;
+            el.radioNotched.disabled = false;
+            el.labelNotched.classList.remove('opacity-50');
+
+            const now = new Date(); const dayOfWeek = now.getDay(); 
+            const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+            const targetMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + 21);
+            const y = targetMonday.getFullYear(), m = String(targetMonday.getMonth() + 1).padStart(2, '0'), d = String(targetMonday.getDate()).padStart(2, '0');
+            el.implantDate.value = `${y}-${m}-${d}T08:30`;
+            setInputMode('duration');
+
+            calculateAll();
+            drawPlaque();
+        }
+
         // --- DRAWING FUNCTIONS ---
         function drawPlaque() {
             if (!el.canvas) return;
@@ -486,7 +503,7 @@
             ctx.clearRect(0, 0, w, h);
             const { active, removed } = getProcessedSeeds();
             const cx = w / 2; 
-            const cy = 210; // Centered to handle fixed proportion scale nicely
+            const cy = 210; 
             const scale = 18; 
             
             ctx.beginPath(); ctx.arc(cx, cy, (state.size/2)*scale, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill(); ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
@@ -540,22 +557,6 @@
             }
         }
 
-        function setCalcMode(dir) {
-            state.calcDirection = dir;
-            if (dir === 'forward') {
-                el.inputGroupActivity.classList.remove('hidden');
-                el.inputGroupDose.classList.add('hidden');
-                el.btnCalcFwd.className = "px-2 py-0.5 text-[10px] font-bold rounded shadow bg-white text-blue-800 transition-all";
-                el.btnCalcBwd.className = "px-2 py-0.5 text-[10px] font-bold rounded text-gray-400 hover:text-gray-600 transition-all";
-            } else {
-                el.inputGroupActivity.classList.add('hidden');
-                el.inputGroupDose.classList.remove('hidden');
-                el.btnCalcBwd.className = "px-2 py-0.5 text-[10px] font-bold rounded shadow bg-white text-blue-800 transition-all";
-                el.btnCalcFwd.className = "px-2 py-0.5 text-[10px] font-bold rounded text-gray-400 hover:text-gray-600 transition-all";
-            }
-            calculateAll();
-        }
-
         function handleManualDurationChange(e) {
             const val = parseFloat(e.target.value);
             if (!isNaN(val) && val >= 0) { state.duration = val; syncDatesFromDuration(); updateDecayFactor(); calculateAll(); }
@@ -596,7 +597,6 @@
         }
 
         function init() {
-            // Populate element references inside init to ensure DOM is ready
             el = {
                 btnModeDuration: document.getElementById('btn-mode-duration'),
                 btnModeDates: document.getElementById('btn-mode-dates'),
@@ -607,23 +607,16 @@
                 implantDate: document.getElementById('implantDate'),
                 removalDate: document.getElementById('removalDate'),
                 decayFactorDisplay: document.getElementById('decayFactorDisplay'),
-                
-                // Inputs & Calc Mode Refs
-                btnCalcFwd: document.getElementById('mode-calc-fwd'),
-                btnCalcBwd: document.getElementById('mode-calc-bwd'),
-                inputGroupActivity: document.getElementById('input-group-activity'),
-                inputGroupDose: document.getElementById('input-group-dose'),
                 seedActivity: document.getElementById('seedActivity'),
                 targetDoseInput: document.getElementById('targetDoseInput'),
-                calculatedActivityDisplay: document.getElementById('calculatedActivityDisplay'),
-
+                btnReset: document.getElementById('btn-reset'),
                 tumorHeight: document.getElementById('tumorHeight'),
                 plaqueSize: document.getElementById('plaqueSize'),
                 radioNotched: document.getElementById('radioNotched'),
                 labelNotched: document.getElementById('labelNotched'),
                 notchLegend: document.getElementById('notchLegend'),
-                doseApex: document.getElementById('dose-apex'),
-                doseApexLabel: document.getElementById('dose-apex-label'),
+                doseRx: document.getElementById('dose-rx'),
+                doseRxLabel: document.getElementById('dose-rx-label'),
                 toggleTableBtn: document.getElementById('toggleTableBtn'),
                 tableContainer: document.getElementById('detailedTableContainer'),
                 tableBody: document.getElementById('detailedTableBody'),
@@ -639,24 +632,36 @@
             const targetMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + 21);
             const y = targetMonday.getFullYear(), m = String(targetMonday.getMonth() + 1).padStart(2, '0'), d = String(targetMonday.getDate()).padStart(2, '0');
             el.implantDate.value = `${y}-${m}-${d}T08:30`;
+            
+            // 초기 설정: Rx Dose 85, Activity 0 (추후 자동 계산됨)
             state.duration = 101.0; el.manualDuration.value = "101.0";
+            state.targetDose = 85.0; el.targetDoseInput.value = "85.0";
             state.seedActivity = 0.00; el.seedActivity.value = "0.00";
+            state.calcDriver = 'dose';
+
             el.btnModeDuration.addEventListener('click', () => setInputMode('duration'));
             el.btnModeDates.addEventListener('click', () => setInputMode('dates'));
             el.manualDuration.addEventListener('input', handleManualDurationChange);
             el.implantDate.addEventListener('input', handleDateChange);
             el.removalDate.addEventListener('input', handleDateChange);
             
-            // Listeners for Calculation Mode
-            el.btnCalcFwd.addEventListener('click', () => setCalcMode('forward'));
-            el.btnCalcBwd.addEventListener('click', () => setCalcMode('backward'));
-            
-            // Input Listeners
-            el.seedActivity.addEventListener('input', e => { state.seedActivity = parseFloat(e.target.value) || 0; calculateAll(); });
-            el.targetDoseInput.addEventListener('input', e => { state.targetDose = parseFloat(e.target.value) || 0; calculateAll(); });
+            el.seedActivity.addEventListener('input', e => { 
+                state.calcDriver = 'activity';
+                calculateAll(); 
+            });
+            el.seedActivity.addEventListener('focus', () => { state.calcDriver = 'activity'; });
+
+            el.targetDoseInput.addEventListener('input', e => { 
+                state.calcDriver = 'dose';
+                state.targetDose = parseFloat(e.target.value) || 0; 
+                calculateAll(); 
+            });
+            el.targetDoseInput.addEventListener('focus', () => { state.calcDriver = 'dose'; });
 
             el.tumorHeight.addEventListener('input', e => { state.tumorHeight = parseFloat(e.target.value) || 0; calculateAll(); });
             el.plaqueSize.addEventListener('change', handlePlaqueSizeChange);
+            el.btnReset.addEventListener('click', resetApp);
+
             document.getElementsByName('shape').forEach(r => r.addEventListener('change', e => { state.isNotched = (e.target.value === 'notched'); calculateAll(); drawPlaque(); }));
             document.getElementsByName('calcMode').forEach(r => r.addEventListener('change', e => { state.calcMode = e.target.value; calculateAll(); }));
             el.toggleTableBtn.addEventListener('click', () => { 
