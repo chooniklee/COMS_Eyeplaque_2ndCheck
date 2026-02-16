@@ -8,12 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .canvas-container { display: flex; justify-content: center; align-items: center; background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; padding: 0.5rem; }
+        .canvas-container { display: flex; justify-content: center; align-items: center; background-color: white; border-radius: 0.25rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; padding: 0.5rem; position: relative; overflow: hidden; }
         
-        /* Custom tab button styles */
-        .tab-btn { transition: all 0.2s; border-bottom-width: 2px; }
+        .tab-btn { transition: all 0.2s; border-bottom-width: 2px; cursor: pointer; }
+        .tab-btn.active { border-color: #3b82f6; color: #1e40af; font-weight: bold; background: #eff6ff; }
         
-        /* Remove arrows/spinners from number inputs to keep text simple */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -21,6 +20,22 @@
         }
         input[type=number] {
             -moz-appearance: textfield;
+        }
+
+        /* Tooltip for canvas */
+        #canvas-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -34,10 +49,10 @@
             <p class="text-sm text-gray-500">TG-43 2nd Check (IsoAid IAI-125A) | Units: Gray (Gy)</p>
         </div>
 
-        <!-- Main Content Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <!-- Main Content Layout - Using a 10-column grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 items-stretch">
 
-            <!-- COLUMN 1: INPUTS (Schedule & Parameters) -->
+            <!-- COLUMN 1: INPUTS (Schedule & Parameters) - 30% width (col-span-3) -->
             <div class="lg:col-span-3 flex flex-col space-y-4">
                 <!-- Schedule Container -->
                 <div class="bg-blue-50 rounded-lg border border-blue-100 overflow-hidden flex flex-col h-[210px] shadow-sm shrink-0">
@@ -47,13 +62,11 @@
                     </div>
 
                     <div class="p-3 flex flex-col flex-1 justify-between min-h-0">
-                        <!-- Input Mode: Duration -->
                         <div id="mode-content-duration" class="block flex flex-col justify-center flex-1 space-y-1">
                             <label class="block text-[10px] font-bold text-blue-800 uppercase text-center">Total Time (Hours)</label>
                             <input type="number" id="manualDuration" step="0.1" value="101.0" class="w-full p-1.5 text-2xl font-mono font-bold text-blue-700 text-center bg-white border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
 
-                        <!-- Input Mode: Dates -->
                         <div id="mode-content-dates" class="hidden flex flex-col space-y-2 flex-1 justify-center">
                             <div class="flex justify-between items-center gap-2">
                                 <span class="text-[11px] font-bold text-gray-500 uppercase">Implant</span>
@@ -69,10 +82,9 @@
                             </div>
                         </div>
 
-                        <!-- Decay Correction Info -->
                         <div class="border-t border-blue-200 pt-2 shrink-0">
                             <div class="flex justify-between items-center">
-                                <span class="text-[11px] font-bold text-blue-900 uppercase leading-none">Decay Corrected:</span>
+                                <span class="text-[11px] font-bold text-blue-900 leading-none">Decay corrected:</span>
                                 <span class="font-mono font-bold text-base text-blue-800" id="decayFactorDisplay">0.000 h</span>
                             </div>
                         </div>
@@ -83,7 +95,6 @@
                 <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex-1">
                     <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
                         <h3 class="text-xs font-bold text-gray-800 uppercase">Parameters</h3>
-                        <!-- Reset Button with Icon -->
                         <button id="btn-reset" class="flex items-center text-[12px] font-bold text-gray-500 hover:text-red-600 transition-colors focus:outline-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -93,7 +104,6 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-x-3 gap-y-3">
-                        <!-- Rx Dose (Gy) and Activity (U/seed) -->
                         <div class="col-span-1">
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Dose (Gy)</label>
                             <input type="number" id="targetDoseInput" step="1.0" value="85.0" class="w-full px-2 py-1.5 text-sm font-bold text-green-700 border border-green-200 bg-green-50 rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all">
@@ -102,8 +112,6 @@
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Activity (U/seed)</label>
                             <input type="number" id="seedActivity" step="0.01" value="0.00" class="w-full px-2 py-1.5 text-sm font-bold text-red-700 border border-red-200 bg-red-50/50 rounded-md focus:ring-2 focus:ring-red-500 outline-none transition-all">
                         </div>
-
-                        <!-- Other Parameters -->
                         <div>
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Depth (mm)</label>
                             <input type="number" id="tumorHeight" step="0.1" value="5.0" class="w-full px-2 py-1.5 text-sm border rounded-md">
@@ -121,7 +129,7 @@
                             </select>
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Shape</label>
+                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Plaque Shape</label>
                             <div class="flex gap-4 mt-0.5 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100">
                                 <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
                                     <input type="radio" name="shape" value="round" checked class="text-blue-600"> Round
@@ -132,22 +140,32 @@
                             </div>
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Model</label>
-                            <div class="flex gap-4 mt-0.5 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100">
-                                <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
-                                    <input type="radio" name="calcMode" value="line" checked class="text-blue-600"> Line Source
-                                </label>
-                                <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
-                                    <input type="radio" name="calcMode" value="point" class="text-blue-600"> Point Source
-                                </label>
+                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Calculation Model</label>
+                            <div class="grid grid-cols-2 gap-2 mt-0.5">
+                                <div class="bg-gray-50 px-2 py-1.5 rounded-md border border-gray-100">
+                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="modelType" value="line" checked class="text-blue-600"> Line Source
+                                    </label>
+                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="modelType" value="point" class="text-blue-600"> Point Source
+                                    </label>
+                                </div>
+                                <div class="bg-gray-50 px-2 py-1.5 rounded-md border border-gray-100">
+                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="coordDataset" value="ps" checked class="text-blue-600"> Plaque Simulator
+                                    </label>
+                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="coordDataset" value="tg129" class="text-blue-600"> TG-129
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- COLUMN 2: UNIFIED RESULTS -->
-            <div class="lg:col-span-5 flex flex-col">
+            <!-- COLUMN 2: UNIFIED RESULTS - 40% width (col-span-4) -->
+            <div id="col-results" class="lg:col-span-4 flex flex-col">
                 <div id="result-container" class="bg-green-50 rounded-lg border border-green-200 shadow-sm flex-col flex h-full overflow-hidden">
                     <div class="bg-green-100/50 border-b border-green-200 py-2 px-4 shrink-0">
                         <h3 class="text-xs font-bold text-green-900 uppercase text-center">Dose Calculation & 2nd Check</h3>
@@ -157,11 +175,11 @@
                         <div id="unified-table-content" class="flex-1 min-h-0 overflow-y-auto">
                             <table class="w-full text-left border-collapse table-fixed">
                                 <thead>
-                                    <tr class="border-b border-green-300 text-[11px] uppercase text-green-800">
+                                    <tr class="border-b border-green-300 text-[11px] font-bold text-green-800">
                                         <th class="py-2 px-1 w-[32%]">Point</th>
-                                        <th class="py-2 px-1 w-[26%] text-right">Calc</th>
-                                        <th class="py-2 px-1 w-[22%] text-center">TPS</th>
-                                        <th class="py-2 px-1 w-[20%] text-right">%Error</th>
+                                        <th class="py-2 px-1 w-[26%] text-right font-bold">Calc (Gy)</th>
+                                        <th class="py-2 px-1 w-[22%] text-center font-bold">TPS (Gy)</th>
+                                        <th class="py-2 px-1 w-[20%] text-right font-bold">%Error</th>
                                     </tr>
                                 </thead>
                                 <tbody id="comparison-rows" class="divide-y divide-green-100">
@@ -187,21 +205,45 @@
                 </div>
             </div>
 
-            <!-- COLUMN 3: VISUALIZATION -->
-            <div class="lg:col-span-4 flex flex-col">
+            <!-- COLUMN 3: VISUALIZATION - 30% width (col-span-3) -->
+            <div id="col-vis" class="lg:col-span-3 flex flex-col transition-all duration-300">
                 <div class="bg-gray-50 rounded-lg border border-gray-200 h-full flex flex-col overflow-hidden shadow-sm">
-                    <!-- Unified Header for Visualization -->
-                    <div class="bg-gray-100 border-b border-gray-200 py-2 px-4 shrink-0 flex flex-col items-center">
-                        <h3 class="text-xs font-bold text-gray-700 uppercase text-center" id="plaque-desc-label">Plaque Geometry</h3>
+                    <div class="flex bg-gray-100 border-b border-gray-200 shrink-0">
+                        <button id="tab-plaque" class="tab-btn flex-1 py-2 text-xs font-bold uppercase active">Plaque</button>
+                        <button id="tab-dose" class="tab-btn flex-1 py-2 text-xs font-bold uppercase">Dose</button>
                     </div>
                     
-                    <div class="p-4 flex flex-col flex-1 justify-center items-center">
-                        <div class="canvas-container w-full bg-white flex-1 min-h-[300px]">
-                            <canvas id="plaqueCanvas" width="450" height="420" class="max-w-full h-auto"></canvas>
+                    <div class="p-0 flex flex-col flex-1 justify-center items-center relative overflow-hidden bg-white">
+                        <div id="view-plaque" class="w-full flex flex-col items-center p-4">
+                            <div class="bg-gray-200/50 px-3 py-1 rounded-full mb-2">
+                                <span id="plaque-desc-label" class="text-[10px] font-bold text-gray-600 uppercase">Plaque Geometry</span>
+                            </div>
+                            <div class="canvas-container w-full bg-white flex-1 min-h-[300px]">
+                                <canvas id="plaqueCanvas" width="300" height="300" class="max-w-full h-auto"></canvas>
+                            </div>
                         </div>
-                        <div class="text-[10px] text-gray-400 mt-2 text-center leading-tight">
-                            Visual representation (TG-129 X-Y plane)
-                            <span id="notchLegend" class="hidden font-bold"><br><span class="text-red-500">Red</span>: Removed notched seed position</span>
+
+                        <div id="view-dose" class="w-full h-full flex flex-col items-center hidden relative">
+                            <div class="absolute top-2 left-2 z-10 flex flex-col gap-2">
+                                <div class="bg-white/90 backdrop-blur px-2 py-1 rounded border shadow-sm flex items-center gap-2">
+                                     <span class="text-[10px] font-bold text-gray-600 uppercase">Rotate</span>
+                                     <button id="rotate-ccw" class="p-1 hover:bg-gray-100 rounded border border-gray-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
+                                     <span id="rotation-val" class="text-[10px] font-mono font-bold w-6 text-center">0°</span>
+                                     <button id="rotate-cw" class="p-1 hover:bg-gray-100 rounded border border-gray-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg></button>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full h-full bg-white flex-1 relative overflow-hidden cursor-move" id="dose-canvas-wrapper">
+                                <canvas id="doseCanvas" class="block w-full h-full"></canvas>
+                                <div id="canvas-tooltip"></div>
+                            </div>
+
+                            <div class="absolute bottom-2 right-2 z-10 bg-white/90 backdrop-blur border shadow-sm rounded p-2 grid grid-cols-1 gap-1">
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-red-600"></div><span class="text-[9px] text-gray-600 font-bold">100% Rx</span></div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-orange-500"></div><span class="text-[9px] text-gray-600 font-bold">50% Rx</span></div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-yellow-500"></div><span class="text-[9px] text-gray-600 font-bold">25% Rx</span></div>
+                                <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-green-500"></div><span class="text-[9px] text-gray-600 font-bold">10% Rx</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -242,14 +284,14 @@
         </div>
 
         <div class="text-[11px] text-gray-400 text-center border-t pt-4">
-            * <strong>IsoAid IAI-125A</strong>. TG-129 Coords. Homogeneous water approximation.
+            * <strong>IsoAid IAI-125A</strong>. Homogeneous water approximation.
         </div>
 
     </div>
 
     <!-- MAIN APP LOGIC -->
     <script>
-        // --- DATA CONSTANTS (TG-129 / Isotope Parameters) ---
+        // --- DATA CONSTANTS ---
         const ISOTOPE_CONSTANTS = { name: "IsoAid IAI-125A", Lambda: 0.981, L: 0.30, HalfLife: 59.43 };
         
         const G_TABLE = {
@@ -278,26 +320,37 @@
             14: [{id:1,x:-5.90,y:0,z:-1.06,ends:[{x:-5.90,y:2.25,z:-1.06},{x:-5.90,y:-2.25,z:-1.06}]},{id:2,x:-2.95,y:-5.11,z:-1.06,ends:[{x:-4.90,y:-3.98,z:-1.06},{x:-1.00,y:-6.23,z:-1.06}]},{id:3,x:2.95,y:-5.11,z:-1.06,ends:[{x:1.00,y:-6.23,z:-1.06},{x:4.90,y:-3.98,z:-1.06}]},{id:4,x:5.90,y:0,z:-1.06,ends:[{x:5.90,y:-2.25,z:-1.06},{x:5.90,y:2.25,z:-1.06}]},{id:5,x:2.95,y:5.11,z:-1.06,ends:[{x:4.90,y:3.98,z:-1.06},{x:1.00,y:6.23,z:-1.06}]},{id:6,x:-2.95,y:5.11,z:-1.06,ends:[{x:-1.00,y:6.23,z:-1.06},{x:-4.90,y:3.98,z:-1.06}]},{id:7,x:-4.10,y:0,z:-1.77,ends:[{x:-4.10,y:2.25,z:-1.77},{x:-4.10,y:-2.25,z:-1.77}]},{id:8,x:0,y:-4.10,z:-1.77,ends:[{x:-2.25,y:-4.10,z:-1.77},{x:2.25,y:-4.10,z:-1.77}]},{id:9,x:4.10,y:0,z:-1.77,ends:[{x:4.10,y:-2.25,z:-1.77},{x:4.10,y:2.25,z:-1.77}]},{id:10,x:0,y:4.10,z:-1.77,ends:[{x:2.25,y:4.10,z:-1.77},{x:-2.25,y:4.10,z:-1.77}]},{id:11,x:0,y:-2.10,z:-2.24,ends:[{x:-2.25,y:-2.10,z:-2.24},{x:2.25,y:-2.10,z:-2.24}]},{id:12,x:0,y:2.10,z:-2.24,ends:[{x:2.25,y:2.10,z:-2.24},{x:-2.25,y:2.10,z:-2.24}]},{id:13,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
             16: [{id:1,x:-5.68,y:-2.73,z:-0.87,ends:[{x:-6.65,y:-0.71,z:-0.87},{x:-4.70,y:-4.76,z:-0.87}]},{id:2,x:-1.40,y:-6.14,z:-0.87,ends:[{x:-3.60,y:-5.64,z:-0.87},{x:0.79,y:-6.64,z:-0.87}]},{id:3,x:3.93,y:-4.93,z:-0.87,ends:[{x:2.17,y:-6.33,z:-0.87},{x:5.69,y:-3.52,z:-0.87}]},{id:4,x:6.30,y:0,z:-0.87,ends:[{x:6.30,y:-2.25,z:-0.87},{x:6.30,y:2.25,z:-0.87}]},{id:5,x:3.93,y:4.93,z:-0.87,ends:[{x:5.69,y:3.52,z:-0.87},{x:2.17,y:6.33,z:-0.87}]},{id:6,x:-1.40,y:6.14,z:-0.87,ends:[{x:0.79,y:6.64,z:-0.87},{x:-3.60,y:5.64,z:-0.87}]},{id:7,x:-5.68,y:2.73,z:-0.87,ends:[{x:-4.70,y:4.76,z:-0.87},{x:-6.65,y:0.71,z:-0.87}]},{id:8,x:-4.50,y:0,z:-1.64,ends:[{x:-4.50,y:2.25,z:-1.64},{x:-4.50,y:-2.25,z:-1.64}]},{id:9,x:0,y:-4.50,z:-1.64,ends:[{x:-2.25,y:-4.50,z:-1.64},{x:2.25,y:-4.50,z:-1.64}]},{id:10,x:4.50,y:0,z:-1.64,ends:[{x:4.50,y:-2.25,z:-1.64},{x:4.50,y:2.25,z:-1.64}]},{id:11,x:0,y:4.50,z:-1.64,ends:[{x:2.25,y:4.50,z:-1.64},{x:-2.25,y:4.50,z:-1.64}]},{id:12,x:0,y:-1.80,z:-2.28,ends:[{x:-2.25,y:-1.80,z:-2.28},{x:2.25,y:-1.80,z:-2.28}]},{id:13,x:0,y:1.80,z:-2.28,ends:[{x:2.25,y:1.80,z:-2.28},{x:-2.25,y:1.80,z:-2.28}]}],
             18: [{id:1,x:-7.70,y:0,z:-0.03,ends:[{x:-7.70,y:2.25,z:-0.03},{x:-7.70,y:-2.25,z:-0.03}]},{id:2,x:-5.44,y:-5.44,z:-0.03,ends:[{x:-7.04,y:-3.85,z:-0.03},{x:-3.85,y:-7.04,z:-0.03}]},{id:3,x:0,y:-7.70,z:-0.03,ends:[{x:-2.25,y:-7.70,z:-0.03},{x:2.25,y:-7.70,z:-0.03}]},{id:4,x:5.44,y:-5.44,z:-0.03,ends:[{x:3.85,y:-7.04,z:-0.03},{x:7.04,y:-3.85,z:-0.03}]},{id:5,x:7.70,y:0,z:-0.03,ends:[{x:7.70,y:-2.25,z:-0.03},{x:7.70,y:2.25,z:-0.03}]},{id:6,x:5.44,y:5.44,z:-0.03,ends:[{x:7.04,y:3.85,z:-0.03},{x:3.85,y:7.04,z:-0.03}]},{id:7,x:0,y:7.70,z:-0.03,ends:[{x:2.25,y:7.70,z:-0.03},{x:-2.25,y:7.70,z:-0.03}]},{id:8,x:-5.44,y:5.44,z:-0.03,ends:[{x:-3.85,y:7.04,z:-0.03},{x:-7.04,y:3.85,z:-0.03}]},{id:9,x:-6.20,y:0,z:-0.92,ends:[{x:-6.20,y:2.25,z:-0.92},{x:-6.20,y:-2.25,z:-0.92}]},{id:10,x:-3.10,y:-5.37,z:-0.92,ends:[{x:-5.05,y:-4.24,z:-0.92},{x:-1.15,y:-6.49,z:-0.92}]},{id:11,x:3.10,y:-5.37,z:-0.92,ends:[{x:1.15,y:-6.49,z:-0.92},{x:5.05,y:-4.24,z:-0.92}]},{id:12,x:6.20,y:0,z:-0.92,ends:[{x:6.20,y:-2.25,z:-0.92},{x:6.20,y:2.25,z:-0.92}]},{id:13,x:3.10,y:5.37,z:-0.92,ends:[{x:5.05,y:4.24,z:-0.92},{x:1.15,y:6.49,z:-0.92}]},{id:14,x:-3.10,y:5.37,z:-0.92,ends:[{x:-1.15,y:6.49,z:-0.92},{x:-5.05,y:4.24,z:-0.92}]},{id:15,x:-3.18,y:-3.18,z:-1.64,ends:[{x:-4.77,y:-1.59,z:-1.64},{x:-1.59,y:-4.77,z:-1.64}]},{id:16,x:3.18,y:-3.18,z:-1.64,ends:[{x:1.59,y:-4.77,z:-1.64},{x:4.77,y:-1.59,z:-1.64}]},{id:17,x:3.18,y:3.18,z:-1.64,ends:[{x:4.77,y:1.59,z:-1.64},{x:1.59,y:4.77,z:-1.64}]},{id:18,x:-3.18,y:3.18,z:-1.64,ends:[{x:-1.59,y:4.77,z:-1.64},{x:-4.77,y:1.59,z:-1.64}]},{id:19,x:0,y:-2.00,z:-2.25,ends:[{x:-2.25,y:-2.00,z:-2.25},{x:2.25,y:-2.00,z:-2.25}]},{id:20,x:0,y:2.00,z:-2.25,ends:[{x:2.25,y:2.00,z:-2.25},{x:-2.25,y:2.00,z:-2.25}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
-            20: [{id:1,x:-8.08,y:-2.94,z:0.64,ends:[{x:-8.85,y:-0.83,z:0.64},{x:-7.31,y:-5.06,z:0.64}]},{id:2,x:-4.30,y:-7.45,z:0.64,ends:[{x:-6.25,y:-6.32,z:0.64},{x:-2.35,y:-8.57,z:0.64}]},{id:3,x:1.49,y:-8.47,z:0.64,ends:[{x:-0.72,y:-8.86,z:0.64},{x:3.71,y:-8.08,z:0.64}]},{id:4,x:6.59,y:-5.53,z:0.64,ends:[{x:5.14,y:-7.25,z:0.64},{x:8.03,y:-3.80,z:0.64}]},{id:5,x:8.60,y:0,z:0.64,ends:[{x:8.60,y:-2.25,z:0.64},{x:8.60,y:2.25,z:0.64}]},{id:6,x:6.59,y:5.53,z:0.64,ends:[{x:8.03,y:3.80,z:0.64},{x:5.14,y:7.25,z:0.64}]},{id:7,x:1.49,y:8.47,z:0.64,ends:[{x:3.71,y:8.08,z:0.64},{x:-0.72,y:8.86,z:0.64}]},{id:8,x:-4.30,y:7.45,z:0.64,ends:[{x:-2.35,y:8.57,z:0.64},{x:-6.25,y:6.32,z:0.64}]},{id:9,x:-8.08,y:2.94,z:0.64,ends:[{x:-7.31,y:5.06,z:0.64},{x:-8.85,y:0.83,z:0.64}]},{id:10,x:-6.53,y:-1.49,z:-0.65,ends:[{x:-7.03,y:0.70,z:-0.65},{x:-6.03,y:-3.68,z:-0.65}]},{id:11,x:-2.91,y:-6.04,z:-0.65,ends:[{x:-4.93,y:-5.06,z:-0.65},{x:-0.88,y:-7.01,z:-0.65}]},{id:12,x:2.91,y:-6.04,z:-0.65,ends:[{x:0.88,y:-7.01,z:-0.65},{x:4.93,y:-5.06,z:-0.65}]},{id:13,x:6.53,y:-1.49,z:-0.65,ends:[{x:6.03,y:-3.68,z:-0.65},{x:7.03,y:0.70,z:-0.65}]},{id:14,x:5.24,y:4.18,z:-0.65,ends:[{x:6.64,y:2.42,z:-0.65},{x:3.84,y:5.94,z:-0.65}]},{id:15,x:0,y:6.70,z:-0.65,ends:[{x:2.25,y:6.70,z:-0.65},{x:-2.25,y:6.70,z:-0.65}]},{id:16,x:-5.24,y:4.18,z:-0.65,ends:[{x:-3.84,y:5.94,z:-0.65},{x:-6.64,y:2.42,z:-0.65}]},{id:17,x:-3.80,y:-2.76,z:-1.57,ends:[{x:-5.12,y:-0.94,z:-1.57},{x:-2.48,y:-4.58,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:-0.69,y:-5.17,z:-1.57},{x:3.59,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-2.25,z:-1.57},{x:4.70,y:2.25,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:3.59,y:3.77,z:-1.57},{x:-0.69,y:5.17,z:-1.57}]},{id:21,x:-3.80,y:2.76,z:-1.57,ends:[{x:-2.48,y:4.58,z:-1.57},{x:-5.12,y:0.94,z:-1.57}]},{id:22,x:0,y:-2.25,z:-2.21,ends:[{x:-2.25,y:-2.25,z:-2.21},{x:2.25,y:-2.25,z:-2.21}]},{id:23,x:0,y:2.25,z:-2.21,ends:[{x:2.25,y:2.25,z:-2.21},{x:-2.25,y:2.25,z:-2.21}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
-            22: [{id:1,x:-9.20,y:0,z:1.15,ends:[{x:-9.20,y:2.25,z:1.15},{x:-9.20,y:-2.25,z:1.15}]},{id:2,x:-6.51,y:-6.51,z:1.15,ends:[{x:-8.10,y:-4.91,z:1.15},{x:-4.91,y:-8.10,z:1.15}]},{id:3,x:0,y:-9.20,z:1.15,ends:[{x:-2.25,y:-9.20,z:1.15},{x:2.25,y:-9.20,z:1.15}]},{id:4,x:6.51,y:-6.51,z:1.15,ends:[{x:4.91,y:-8.10,z:1.15},{x:8.10,y:-4.91,z:1.15}]},{id:5,x:9.20,y:0,z:1.15,ends:[{x:9.20,y:-2.25,z:1.15},{x:9.20,y:2.25,z:1.15}]},{id:6,x:6.51,y:6.51,z:1.15,ends:[{x:8.10,y:4.91,z:1.15},{x:4.91,y:8.10,z:1.15}]},{id:7,x:0,y:9.20,z:1.15,ends:[{x:2.25,y:9.20,z:1.15},{x:-2.25,y:9.20,z:1.15}]},{id:8,x:-6.51,y:6.51,z:1.15,ends:[{x:-4.91,y:8.10,z:1.15},{x:-8.10,y:4.91,z:1.15}]},{id:9,x:-7.19,y:-1.27,z:-0.29,ends:[{x:-7.58,y:0.95,z:-0.29},{x:-6.80,y:-3.48,z:-0.29}]},{id:10,x:-2.50,y:-6.86,z:-0.29,ends:[{x:-4.61,y:-6.09,z:-0.29},{x:-0.38,y:-7.63,z:-0.29}]},{id:11,x:4.69,y:-5.59,z:-0.29,ends:[{x:2.97,y:-7.04,z:-0.29},{x:6.42,y:-4.15,z:-0.29}]},{id:12,x:7.19,y:1.27,z:-0.29,ends:[{x:7.58,y:-0.95,z:-0.29},{x:6.80,y:3.48,z:-0.29}]},{id:13,x:2.50,y:6.86,z:-0.29,ends:[{x:4.61,y:6.09,z:-0.29},{x:0.38,y:7.63,z:-0.29}]},{id:14,x:-4.69,y:5.59,z:-0.29,ends:[{x:-2.97,y:7.04,z:-0.29},{x:-6.42,y:4.15,z:-0.29}]},{id:15,x:-3.09,y:-3.68,z:-1.53,ends:[{x:-4.81,y:-2.23,z:-1.53},{x:-1.36,y:-5.12,z:-1.53}]},{id:16,x:3.68,y:-3.09,z:-1.53,ends:[{x:2.23,y:-4.81,z:-1.53},{x:5.12,y:-1.36,z:-1.53}]},{id:17,x:3.09,y:3.68,z:-1.53,ends:[{x:4.81,y:2.23,z:-1.53},{x:1.36,y:5.12,z:-1.53}]},{id:18,x:-3.68,y:3.09,z:-1.53,ends:[{x:-2.23,y:4.81,z:-1.53},{x:-5.12,y:1.36,z:-1.53}]},{id:19,x:0.20,y:-2.24,z:-2.21,ends:[{x:-2.05,y:-2.44,z:-2.21},{x:2.44,y:-2.05,z:-2.21}]},{id:20,x:-0.20,y:2.24,z:-2.21,ends:[{x:2.05,y:2.44,z:-2.21},{x:-2.44,y:2.05,z:-2.21}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:2.24,y:0.20,z:-2.40},{x:-2.24,y:-0.20,z:-2.40}]}]
+            20: [{id:1,x:-8.08,y:-2.94,z:0.64,ends:[{x:-8.85,y:-0.83,z:0.64},{x:-7.31,y:-5.06,z:0.64}]},{id:2,x:-4.30,y:-7.45,z:0.64,ends:[{x:-6.25,y:-6.32,z:0.64},{x:-2.35,y:-8.57,z:0.64}]},{id:3,x:1.49,y:-8.47,z:0.64,ends:[{x:-0.72,y:-8.86,z:0.64},{x:3.71,y:-8.08,z:0.64}]},{id:4,x:6.59,y:-5.53,z:0.64,ends:[{x:5.14,y:-7.25,z:0.64},{x:8.03,y:-3.80,z:0.64}]},{id:5,x:8.60,y:0,z:0.64,ends:[{x:8.60,y:-2.25,z:0.64},{x:8.60,y:2.25,z:0.64}]},{id:6,x:6.59,y:5.53,z:0.64,ends:[{x:8.03,y:3.80,z:0.64},{x:5.14,y:7.25,z:0.64}]},{id:7,x:1.49,y:8.47,z:0.64,ends:[{x:3.71,y:8.08,z:0.64},{x:-0.72,y:8.86,z:0.64}]},{id:8,x:-4.30,y:7.45,z:0.64,ends:[{x:-2.35,y:8.57,z:0.64},{x:-6.25,y:6.32,z:0.64}]},{id:9,x:-8.08,y:2.94,z:0.64,ends:[{x:-7.31,y:5.06,z:0.64},{x:-8.85,y:0.83,z:0.64}]},{id:10,x:-6.53,y:-1.49,z:-0.65,ends:[{x:-7.03,y:0.70,z:-0.65},{x:-6.03,y:-3.68,z:-0.65}]},{id:11,x:-2.91,y:-6.04,z:-0.65,ends:[{x:-4.93,y:-5.06,z:-0.65},{x:-0.88,y:-7.01,z:-0.65}]},{id:12,x:2.91,y:-6.04,z:-0.65,ends:[{x:0.88,y:-7.01,z:-0.65},{x:4.93,y:-5.06,z:-0.65}]},{id:13,x:6.53,y:-1.49,z:-0.65,ends:[{x:6.03,y:-3.68,z:-0.65},{x:7.03,y:0.70,z:-0.65}]},{id:14,x:5.24,y:4.18,z:-0.65,ends:[{x:6.64,y:2.42,z:-0.65},{x:3.84,y:5.94,z:-0.65}]},{id:15,x:0,y:6.70,z:-0.65,ends:[{x:2.25,y:6.70,z:-0.65},{x:-2.25,y:6.70,z:-0.65}]},{id:16,x:-5.24,y:4.18,z:-0.65,ends:[{x:-3.84,y:5.94,z:-0.65},{x:-6.64,y:2.42,z:-0.65}]},{id:17,x:-3.80,y:-2.76,z:-1.57,ends:[{x:-5.12,y:-0.94,z:-1.57},{x:-2.48,y:-4.58,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:-0.69,y:-5.17,z:-1.57},{x:3.59,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-1.50,z:-1.57},{x:4.70,y:1.50,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:3.59,y:3.77,z:-1.57},{x:-0.69,y:5.17,z:-1.57}]},{id:21,x:-3.80,y:2.76,z:-1.57,ends:[{x:-2.48,y:4.58,z:-1.57},{x:-5.12,y:0.94,z:-1.57}]},{id:22,x:0,y:-2.25,z:-2.21,ends:[{x:-2.25,y:-2.25,z:-2.21},{x:2.25,y:-2.25,z:-2.21}]},{id:23,x:0,y:2.25,z:-2.21,ends:[{x:2.25,y:2.25,z:-2.21},{x:-2.25,y:2.25,z:-2.21}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
+            22: [{id:1,x:-9.20,y:0,z:1.15,ends:[{x:-9.20,y:2.25,z:1.15},{x:-9.20,y:-2.25,z:1.15}]},{id:2,x:-6.51,y:-6.51,z:1.15,ends:[{x:-8.10,y:-4.91,z:1.15},{x:-4.91,y:-8.10,z:1.15}]},{id:3,x:0,y:-9.20,z:1.15,ends:[{x:-2.25,y:-9.20,z:1.15},{x:2.25,y:-9.20,z:1.15}]},{id:4,x:6.51,y:-6.51,z:1.15,ends:[{x:4.91,y:-8.10,z:1.15},{x:8.10,y:-4.91,z:1.15}]},{id:5,x:9.20,y:0,z:1.15,ends:[{x:9.20,y:-2.25,z:1.15},{x:9.20,y:2.25,z:1.15}]},{id:6,x:6.51,y:6.51,z:1.15,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:9.20,z:1.15,ends:[{x:2.25,y:9.20,z:1.15},{x:-2.25,y:9.20,z:1.15}]},{id:8,x:-6.51,y:6.51,z:1.15,ends:[{x:-4.91,y:8.10,z:1.15},{x:-8.10,y:4.91,z:1.15}]},{id:9,x:-7.19,y:-1.27,z:-0.29,ends:[{x:-7.58,y:0.95,z:-0.29},{x:-6.80,y:-3.48,z:-0.29}]},{id:10,x:-2.50,y:-6.86,z:-0.29,ends:[{x:-4.61,y:-6.09,z:-0.29},{x:-0.38,y:-7.63,z:-0.29}]},{id:11,x:4.69,y:-5.59,z:-0.29,ends:[{x:2.97,y:-7.04,z:-0.29},{x:6.42,y:-4.15,z:-0.29}]},{id:12,x:7.19,y:1.27,z:-0.29,ends:[{x:7.58,y:-0.95,z:-0.29},{x:6.80,y:3.48,z:-0.29}]},{id:13,x:2.50,y:6.86,z:-0.29,ends:[{x:4.61,y:6.09,z:-0.29},{x:0.38,y:7.63,z:-0.29}]},{id:14,x:-4.69,y:5.59,z:-0.29,ends:[{x:-2.97,y:7.04,z:-0.29},{x:-6.42,y:4.15,z:-0.29}]},{id:15,x:-3.09,y:-3.68,z:-1.53,ends:[{x:-4.81,y:-2.23,z:-1.53},{x:-1.36,y:-5.12,z:-1.53}]},{id:16,x:3.68,y:-3.09,z:-1.53,ends:[{x:2.23,y:-4.81,z:-1.53},{x:5.12,y:-1.36,z:-1.53}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0.20,y:-2.24,z:-2.21,ends:[{x:-2.05,y:-2.44,z:-2.21},{x:2.44,y:-2.05,z:-2.21}]},{id:20,x:-0.20,y:2.24,z:-2.21,ends:[{x:2.05,y:2.44,z:-2.21},{x:-2.44,y:2.05,z:-2.21}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:2.24,y:0.20,z:-2.40},{x:-2.24,y:-0.20,z:-2.40}]}]
+        };
+
+        const PS_DATA = {
+            10: [{id:1,x:-2.03,y:-2.03,z:-2.10,ends:[{x:-3.09,y:-0.97,z:-2.10},{x:-0.97,y:-3.09,z:-2.10}]},{id:2,x:2.03,y:-2.03,z:-2.10,ends:[{x:0.97,y:-3.09,z:-2.10},{x:3.09,y:-0.97,z:-2.10}]},{id:3,x:2.03,y:2.03,z:-2.10,ends:[{x:3.09,y:0.97,z:-2.10},{x:0.97,y:3.09,z:-2.10}]},{id:4,x:-2.03,y:2.03,z:-2.10,ends:[{x:-0.97,y:3.09,z:-2.10},{x:-3.09,y:0.97,z:-2.10}]},{id:5,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            12: [{id:1,x:-3.79,y:-2.75,z:-1.57,ends:[{x:-4.67,y:-1.54,z:-1.57},{x:-2.91,y:-3.97,z:-1.57}]},{id:2,x:1.45,y:-4.46,z:-1.57,ends:[{x:0.02,y:-4.92,z:-1.57},{x:2.87,y:-3.99,z:-1.57}]},{id:3,x:4.69,y:0,z:-1.57,ends:[{x:4.69,y:-1.50,z:-1.57},{x:4.69,y:1.50,z:-1.57}]},{id:4,x:1.45,y:4.46,z:-1.57,ends:[{x:2.87,y:3.99,z:-1.57},{x:0.02,y:4.92,z:-1.57}]},{id:5,x:-3.79,y:2.75,z:-1.57,ends:[{x:-2.91,y:3.97,z:-1.57},{x:-4.67,y:1.54,z:-1.57}]},{id:6,x:0,y:-2.85,z:-2.10,ends:[{x:-1.50,y:-2.85,z:-2.10},{x:1.50,y:-2.85,z:-2.10}]},{id:7,x:0,y:2.85,z:-2.10,ends:[{x:1.50,y:2.85,z:-2.10},{x:-1.50,y:2.85,z:-2.10}]},{id:8,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            14: [{id:1,x:-6.01,y:0,z:-1.01,ends:[{x:-6.01,y:1.50,z:-1.01},{x:-6.01,y:-1.50,z:-1.01}]},{id:2,x:-3.00,y:-5.20,z:-1.01,ends:[{x:-4.30,y:-4.45,z:-1.01},{x:-1.70,y:-5.95,z:-1.01}]},{id:3,x:3.00,y:-5.20,z:-1.01,ends:[{x:1.70,y:-5.95,z:-1.01},{x:4.30,y:-4.45,z:-1.01}]},{id:4,x:6.01,y:0,z:-1.01,ends:[{x:6.01,y:-1.50,z:-1.01},{x:6.01,y:1.50,z:-1.01}]},{id:5,x:3.00,y:5.20,z:-1.01,ends:[{x:4.30,y:4.45,z:-1.01},{x:1.70,y:5.95,z:-1.01}]},{id:6,x:-3.00,y:5.20,z:-1.01,ends:[{x:-1.70,y:5.95,z:-1.01},{x:-4.30,y:4.45,z:-1.01}]},{id:7,x:-4.01,y:0,z:-1.80,ends:[{x:-4.01,y:1.50,z:-1.80},{x:-4.01,y:-1.50,z:-1.80}]},{id:8,x:0,y:-4.01,z:-1.80,ends:[{x:-1.50,y:-4.01,z:-1.80},{x:1.50,y:-4.01,z:-1.80}]},{id:9,x:4.01,y:0,z:-1.80,ends:[{x:4.01,y:-1.50,z:-1.80},{x:4.01,y:1.50,z:-1.80}]},{id:10,x:0,y:4.01,z:-1.80,ends:[{x:1.50,y:4.01,z:-1.80},{x:-1.50,y:4.01,z:-1.80}]},{id:11,x:0,y:-1.91,z:-2.27,ends:[{x:-1.50,y:-1.91,z:-2.27},{x:1.50,y:-1.91,z:-2.27}]},{id:12,x:0,y:1.91,z:-2.27,ends:[{x:1.50,y:1.91,z:-2.27},{x:-1.50,y:1.91,z:-2.27}]},{id:13,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            16: [{id:1,x:-5.78,y:-2.82,z:-0.80,ends:[{x:-6.44,y:-1.47,z:-0.80},{x:-5.12,y:-4.17,z:-0.80}]},{id:2,x:-1.45,y:-6.27,z:-0.80,ends:[{x:-2.91,y:-5.93,z:-0.80},{x:0.01,y:-6.60,z:-0.80}]},{id:3,x:4.05,y:-5.00,z:-0.80,ends:[{x:2.88,y:-5.94,z:-0.80},{x:5.21,y:-4.05,z:-0.80}]},{id:4,x:6.43,y:0,z:-0.80,ends:[{x:6.43,y:-1.50,z:-0.80},{x:6.43,y:1.50,z:-0.80}]},{id:5,x:4.05,y:5.00,z:-0.80,ends:[{x:5.21,y:4.05,z:-0.80},{x:2.88,y:5.94,z:-0.80}]},{id:6,x:-1.45,y:6.27,z:-0.80,ends:[{x:0.01,y:6.60,z:-0.80},{x:-2.91,y:5.93,z:-0.80}]},{id:7,x:-5.78,y:2.82,z:-0.80,ends:[{x:-5.12,y:4.17,z:-0.80},{x:-6.44,y:1.47,z:-0.80}]},{id:8,x:-4.46,y:0,z:-1.65,ends:[{x:-4.46,y:1.50,z:-1.65},{x:-4.46,y:-1.50,z:-1.65}]},{id:9,x:0,y:-4.46,z:-1.65,ends:[{x:-1.50,y:-4.46,z:-1.65},{x:1.50,y:-4.46,z:-1.65}]},{id:10,x:4.46,y:0,z:-1.65,ends:[{x:4.46,y:-1.50,z:-1.65},{x:4.46,y:1.50,z:-1.65}]},{id:11,x:0,y:4.46,z:-1.65,ends:[{x:1.50,y:4.46,z:-1.65},{x:-1.50,y:4.46,z:-1.65}]},{id:12,x:0,y:-1.67,z:-2.30,ends:[{x:-1.50,y:-1.67,z:-2.30},{x:1.50,y:-1.67,z:-2.30}]},{id:13,x:0,y:1.67,z:-2.30,ends:[{x:1.50,y:1.67,z:-2.30},{x:-1.50,y:1.67,z:-2.30}]}],
+            18: [{id:1,x:-7.86,y:0,z:0.08,ends:[{x:-7.86,y:1.50,z:0.08},{x:-7.86,y:-1.50,z:0.08}]},{id:2,x:-5.56,y:-5.56,z:0.08,ends:[{x:-6.62,y:-4.50,z:0.08},{x:-4.50,y:-6.62,z:0.08}]},{id:3,x:0,y:-7.86,z:0.08,ends:[{x:-1.50,y:-7.86,z:0.08},{x:1.50,y:-7.86,z:0.08}]},{id:4,x:5.56,y:-5.56,z:0.08,ends:[{x:4.50,y:-6.62,z:0.08},{x:6.62,y:-4.50,z:0.08}]},{id:5,x:7.86,y:0,z:0.08,ends:[{x:7.86,y:-1.50,z:0.08},{x:7.86,y:1.50,z:0.08}]},{id:6,x:5.56,y:5.56,z:0.08,ends:[{x:6.62,y:4.50,z:0.08},{x:4.50,y:6.62,z:0.08}]},{id:7,x:0,y:7.86,z:0.08,ends:[{x:1.50,y:7.86,z:0.08},{x:-1.50,y:7.86,z:0.08}]},{id:8,x:-5.56,y:5.56,z:0.08,ends:[{x:-4.50,y:6.62,z:0.08},{x:-6.62,y:4.50,z:0.08}]},{id:9,x:-6.01,y:0,z:-1.01,ends:[{x:-6.01,y:1.50,z:-1.01},{x:-6.01,y:-1.50,z:-1.01}]},{id:10,x:-3.00,y:-5.20,z:-1.01,ends:[{x:-4.30,y:-4.45,z:-1.01},{x:-1.70,y:-5.95,z:-1.01}]},{id:11,x:3.00,y:-5.20,z:-1.01,ends:[{x:1.70,y:-5.95,z:-1.01},{x:4.30,y:-4.45,z:-1.01}]},{id:12,x:6.01,y:0,z:-1.01,ends:[{x:6.01,y:-1.50,z:-1.01},{x:6.01,y:1.50,z:-1.01}]},{id:13,x:3.00,y:5.20,z:-1.01,ends:[{x:4.30,y:4.45,z:-1.01},{x:1.70,y:5.95,z:-1.01}]},{id:14,x:-3.00,y:5.20,z:-1.01,ends:[{x:-1.70,y:5.95,z:-1.01},{x:-4.30,y:4.45,z:-1.01}]},{id:15,x:-2.99,y:-2.99,z:-1.73,ends:[{x:-4.05,y:-1.93,z:-1.73},{x:-1.93,y:-4.05,z:-1.73}]},{id:16,x:2.99,y:-2.99,z:-1.73,ends:[{x:1.93,y:-4.05,z:-1.73},{x:4.05,y:-1.93,z:-1.73}]},{id:17,x:2.99,y:2.99,z:-1.73,ends:[{x:4.05,y:1.93,z:-1.73},{x:1.93,y:4.05,z:-1.73}]},{id:18,x:-2.99,y:2.99,z:-1.73,ends:[{x:-1.93,y:4.05,z:-1.73},{x:-4.05,y:1.93,z:-1.73}]},{id:19,x:0,y:-1.91,z:-2.27,ends:[{x:-1.50,y:-1.91,z:-2.27},{x:1.50,y:-1.91,z:-2.27}]},{id:20,x:0,y:1.91,z:-2.27,ends:[{x:1.50,y:1.91,z:-2.27},{x:-1.50,y:1.91,z:-2.27}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            20: [{id:1,x:-8.15,y:-2.97,z:0.70,ends:[{x:-8.67,y:-1.56,z:0.70},{x:-7.64,y:-4.38,z:0.70}]},{id:2,x:-4.34,y:-7.51,z:0.70,ends:[{x:-5.64,y:-6.76,z:0.70},{x:-3.04,y:-8.26,z:0.70}]},{id:3,x:1.51,y:-8.55,z:0.70,ends:[{x:0.03,y:-8.81,z:0.70},{x:2.98,y:-8.29,z:0.70}]},{id:4,x:6.65,y:-5.58,z:0.70,ends:[{x:5.68,y:-6.73,z:0.70},{x:7.61,y:-4.43,z:0.70}]},{id:5,x:8.68,y:0,z:0.70,ends:[{x:8.68,y:-1.50,z:0.70},{x:8.68,y:1.50,z:0.70}]},{id:6,x:6.65,y:5.53,z:0.70,ends:[{x:7.61,y:4.43,z:0.70},{x:5.68,y:6.73,z:0.70}]},{id:7,x:1.51,y:8.55,z:0.70,ends:[{x:2.98,y:8.29,z:0.70},{x:0.03,y:8.81,z:0.70}]},{id:8,x:-4.34,y:7.51,z:0.70,ends:[{x:-3.04,y:8.26,z:0.70},{x:-5.64,y:6.76,z:0.70}]},{id:9,x:-8.15,y:2.97,z:0.70,ends:[{x:-7.64,y:4.38,z:0.70},{x:-8.67,y:1.56,z:0.70}]},{id:10,x:-6.62,y:-1.29,z:-0.62,ends:[{x:-6.91,y:0.19,z:-0.62},{x:-6.34,y:-2.76,z:-0.62}]},{id:11,x:-3.17,y:-5.96,z:-0.62,ends:[{x:-4.49,y:-5.25,z:-0.62},{x:-1.84,y:-6.66,z:-0.62}]},{id:12,x:2.74,y:-6.16,z:-0.62,ends:[{x:1.37,y:-6.77,z:-0.62},{x:4.11,y:-5.55,z:-0.62}]},{id:13,x:6.52,y:-1.75,z:-0.62,ends:[{x:6.13,y:-3.19,z:-0.62},{x:6.90,y:-0.30,z:-0.62}]},{id:14,x:5.46,y:3.97,z:-0.62,ends:[{x:6.34,y:2.75,z:-0.62},{x:4.58,y:5.18,z:-0.62}]},{id:15,x:0.24,y:6.74,z:-0.62,ends:[{x:1.73,y:6.69,z:-0.62},{x:-1.26,y:6.79,z:-0.62}]},{id:16,x:-5.09,y:4.43,z:-0.62,ends:[{x:-4.11,y:5.56,z:-0.62},{x:-6.08,y:3.29,z:-0.62}]},{id:17,x:-3.79,y:-2.75,z:-1.57,ends:[{x:-4.67,y:-1.54,z:-1.57},{x:-2.91,y:-3.97,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:0.02,y:-4.92,z:-1.57},{x:2.87,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-1.50,z:-1.57},{x:4.70,y:1.50,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:2.87,y:3.99,z:-1.57},{x:0.02,y:4.92,z:-1.57}]},{id:21,x:-3.79,y:2.76,z:-1.57,ends:[{x:-2.91,y:3.97,z:-1.57},{x:-4.67,y:1.54,z:-1.57}]},{id:22,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:23,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            22: [{id:1,x:-8.99,y:0,z:0.96,ends:[{x:-8.99,y:1.50,z:0.96},{x:-8.99,y:-1.50,z:0.96}]},{id:2,x:-6.36,y:-6.36,z:0.96,ends:[{x:-7.42,y:-5.29,z:0.96},{x:-5.29,y:-7.42,z:0.96}]},{id:3,x:0,y:-8.99,z:0.96,ends:[{x:-1.50,y:-8.99,z:0.96},{x:1.50,y:-8.99,z:0.96}]},{id:4,x:6.36,y:-6.36,z:0.96,ends:[{x:5.29,y:-7.42,z:0.96},{x:7.42,y:-5.29,z:0.96}]},{id:5,x:8.99,y:0,z:0.96,ends:[{x:8.99,y:-1.50,z:0.96},{x:8.99,y:1.50,z:0.96}]},{id:6,x:6.36,y:6.36,z:0.96,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:8.99,z:0.96,ends:[{x:1.50,y:8.99,z:0.96},{x:-1.50,y:8.99,z:0.96}]},{id:8,x:-6.36,y:6.36,z:0.96,ends:[{x:-5.29,y:7.42,z:0.96},{x:-7.42,y:5.29,z:0.96}]},{id:9,x:-7.07,y:-1.12,z:-0.38,ends:[{x:-7.30,y:0.36,z:-0.38},{x:-6.84,y:-2.60,z:-0.38}]},{id:10,x:-2.91,y:-6.54,z:-0.38,ends:[{x:-4.28,y:-5.93,z:-0.38},{x:-1.54,y:-7.15,z:-0.38}]},{id:11,x:4.41,y:-5.64,z:-0.38,ends:[{x:3.23,y:-6.56,z:-0.38},{x:5.59,y:-4.72,z:-0.38}]},{id:12,x:7.13,y:0.62,z:-0.38,ends:[{x:7.26,y:-0.87,z:-0.38},{x:7.00,y:2.12,z:-0.38}]},{id:13,x:3.25,y:6.38,z:-0.38,ends:[{x:4.59,y:5.70,z:-0.38},{x:1.91,y:7.06,z:-0.38}]},{id:14,x:-4.60,y:5.48,z:-0.38,ends:[{x:-3.45,y:6.45,z:-0.38},{x:-5.75,y:4.52,z:-0.38}]},{id:15,x:-3.31,y:-3.31,z:-1.57,ends:[{x:-4.37,y:-2.25,z:-1.57},{x:-2.25,y:-4.37,z:-1.57}]},{id:16,x:3.31,y:-3.31,z:-1.57,ends:[{x:2.25,y:-4.37,z:-1.57},{x:4.37,y:-2.25,z:-1.57}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:20,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}]
         };
 
         // --- APP STATE ---
         const state = {
-            size: 16, isNotched: false, calcMode: 'line', inputMode: 'duration',
-            duration: 101.0, tumorHeight: 5.0, seedActivity: 0.00, showTable: false,
-            // 기본 Rx Dose를 85로 설정하고 Driver를 'dose'로 시작하여 초기 계산 수행
-            calcDriver: 'dose', 
-            targetDose: 85.0,
-            tpsValues: { ext_sclera: 0, sclera: 0, coms_5mm: 0, eye_origin: 0, opp_retina: 0, rx: 0 }
+            size: 16, isNotched: false, model: 'line', dataset: 'ps',
+            inputMode: 'duration', duration: 101.0, tumorHeight: 5.0, seedActivity: 0.00, showTable: false,
+            calcDriver: 'dose', targetDose: 85.0,
+            tpsValues: { ext_sclera: 0, sclera: 0, coms_5mm: 0, eye_origin: 0, opp_retina: 0, rx: 0 },
+            activeTab: 'plaque', rotation: 0, results: {}
         };
 
-        // --- GLOBAL DOM REFS (Initialized in init) ---
+        let viewport = { scale: 12.0, offset: {x: 0, y: 0}, isDragging: false, last: {x:0, y:0} };
+        let doseGrid = null, cachedPaths = null;
+        const GRID_SIZE = 50, VIEW_X_RANGE = [-15, 15], VIEW_Z_RANGE = [-5, 25];
         let el = {};
 
-        // --- PHYSICS CORE (TG-43 Standard) ---
-        function calculate_g(r) {
-            const data = state.calcMode === 'point' ? G_TABLE.point : G_TABLE.line;
+        // --- PHYSICS ---
+        function calculate_g(r, isPoint) {
+            const data = isPoint ? G_TABLE.point : G_TABLE.line;
             if (r <= G_TABLE.r[0]) return data[0];
             if (r >= G_TABLE.r[G_TABLE.r.length - 1]) return data[data.length - 1];
             let i = 0; while (i < G_TABLE.r.length - 1 && r > G_TABLE.r[i+1]) i++;
@@ -306,14 +359,10 @@
 
         function calculate_G_line(r, pt, seed) {
             const L = ISOTOPE_CONSTANTS.L;
-            const u = { 
-                x: (seed.ends[1].x - seed.ends[0].x) / 10, 
-                y: (seed.ends[1].y - seed.ends[0].y) / 10, 
-                z: (seed.ends[1].z - seed.ends[0].z) / 10 
-            };
-            const u_mag = Math.sqrt(u.x**2 + u.y**2 + u.z**2);
-            const rv = { x: pt.x - seed.x/10, y: pt.y - seed.y/10, z: pt.z - seed.z/10 };
-            const dot = rv.x*u.x + rv.y*u.y + rv.z*u.z;
+            const u = { x: (seed.ends[1].x-seed.ends[0].x)/10, y: (seed.ends[1].y-seed.ends[0].y)/10, z: (seed.ends[1].z-seed.ends[0].z)/10 };
+            const u_mag = Math.sqrt(u.x**2+u.y**2+u.z**2);
+            const rv = { x: pt.x-seed.x/10, y: pt.y-seed.y/10, z: pt.z-seed.z/10 };
+            const dot = rv.x*u.x+rv.y*u.y+rv.z*u.z;
             const theta = Math.acos(Math.max(-1, Math.min(1, dot/(r*u_mag))));
             const st = Math.sin(theta);
             if (Math.abs(st) < 0.0001) return 1 / (r**2 - (L/2)**2);
@@ -321,17 +370,14 @@
         }
 
         function get_Theta_Deg(r, pt, seed) {
-            const u = { 
-                x: (seed.ends[1].x - seed.ends[0].x) / 10, 
-                y: (seed.ends[1].y - seed.ends[0].y) / 10, 
-                z: (seed.ends[1].z - seed.ends[0].z) / 10 
-            };
-            const rv = { x: pt.x - seed.x/10, y: pt.y - seed.y/10, z: pt.z - seed.z/10 };
+            const u = { x: (seed.ends[1].x-seed.ends[0].x)/10, y: (seed.ends[1].y-seed.ends[0].y)/10, z: (seed.ends[1].z-seed.ends[0].z)/10 };
+            const rv = { x: pt.x-seed.x/10, y: pt.y-seed.y/10, z: pt.z-seed.z/10 };
             const dot = rv.x*u.x + rv.y*u.y + rv.z*u.z;
             return Math.acos(Math.max(-1, Math.min(1, dot/(r*Math.sqrt(u.x**2+u.y**2+u.z**2))))) * 180 / Math.PI;
         }
 
-        function get_F(r, theta_deg) {
+        function get_F(r, theta_deg, isPoint) {
+            if (isPoint) return 1.0;
             let t = theta_deg > 90 ? 180 - theta_deg : Math.max(0, theta_deg);
             const reff = Math.max(0.5, Math.min(r, 7.0));
             let i = 0; while (i < F_TABLE.r.length - 2 && reff > F_TABLE.r[i+1]) i++;
@@ -345,330 +391,271 @@
 
         const G_REF_L = (function(){ const r=1, t=Math.PI/2, L=0.3; return (Math.atan(L/(2*r)) - Math.atan(-L/(2*r))) / (L*r); })();
 
-        // --- CALCULATIONS ---
         function calculateAll() {
             if (!el.doseRx || state.duration < 0) return;
             const lambda = Math.LN2 / (ISOTOPE_CONSTANTS.HalfLife * 24.0);
             const df = (state.duration > 0) ? (1 - Math.exp(-lambda * state.duration)) / lambda : 0;
-            const gref = state.calcMode === 'point' ? 1 : G_REF_L;
+            const isPoint = state.model === 'point';
+            const gref = isPoint ? 1 : G_REF_L;
             const { active } = getProcessedSeeds();
             
             const rx_pt = { x: 0, y: 0, z: state.tumorHeight / 10 };
             let rx_geom_sum = 0;
-            
             active.forEach(s => {
                 const r = Math.sqrt((rx_pt.x - s.x/10)**2 + (rx_pt.y - s.y/10)**2 + (rx_pt.z - s.z/10)**2);
-                const g = calculate_g(r);
+                const g = calculate_g(r, isPoint);
                 let G, F;
-                if (state.calcMode === 'point') { G = 1/r**2; F = 1; }
-                else { G = calculate_G_line(r, rx_pt, s); F = get_F(r, get_Theta_Deg(r, rx_pt, s)); }
+                if (isPoint) { G = 1/r**2; F = 1; }
+                else { G = calculate_G_line(r, rx_pt, s); F = get_F(r, get_Theta_Deg(r, rx_pt, s), false); }
                 rx_geom_sum += (ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F);
             });
 
             if (state.calcDriver === 'dose') {
-                if (df > 0 && rx_geom_sum > 0) {
-                    const requiredAct = (state.targetDose * 100.0) / (rx_geom_sum * df);
-                    state.seedActivity = requiredAct;
-                    el.seedActivity.value = requiredAct.toFixed(3);
-                } else {
-                    state.seedActivity = 0;
-                    el.seedActivity.value = "0.00";
-                }
+                state.seedActivity = (df > 0 && rx_geom_sum > 0) ? (state.targetDose * 100.0) / (rx_geom_sum * df) : 0;
+                el.seedActivity.value = state.seedActivity.toFixed(3);
             } else {
                 state.seedActivity = Math.max(0, parseFloat(el.seedActivity.value) || 0);
             }
 
-            const pts_coords = { 
-                ext_sclera: { x: 0, y: 0, z: -0.1 }, 
-                sclera: { x: 0, y: 0, z: 0 }, 
-                coms_5mm: { x: 0, y: 0, z: 0.5 }, 
-                eye_origin: { x: 0, y: 0, z: 1.1 }, 
-                opp_retina: { x: 0, y: 0, z: 2.2 }, 
-                rx: { x: 0, y: 0, z: state.tumorHeight / 10 } 
-            };
-            
+            const pts_coords = { ext_sclera: { x: 0, y: 0, z: -0.1 }, sclera: { x: 0, y: 0, z: 0 }, coms_5mm: { x: 0, y: 0, z: 0.5 }, eye_origin: { x: 0, y: 0, z: 1.1 }, opp_retina: { x: 0, y: 0, z: 2.2 }, rx: { x: 0, y: 0, z: state.tumorHeight / 10 } };
             const res = {};
             for (const [k, p] of Object.entries(pts_coords)) {
                 let dose = 0;
                 active.forEach(s => {
                     const r = Math.sqrt((p.x - s.x/10)**2 + (p.y - s.y/10)**2 + (p.z - s.z/10)**2);
-                    const g = calculate_g(r);
+                    const g = calculate_g(r, isPoint);
                     let G, F;
-                    if (state.calcMode === 'point') { G = 1/r**2; F = 1; }
-                    else { G = calculate_G_line(r, p, s); F = get_F(r, get_Theta_Deg(r, p, s)); }
+                    if (isPoint) { G = 1/r**2; F = 1; }
+                    else { G = calculate_G_line(r, p, s); F = get_F(r, get_Theta_Deg(r, p, s), false); }
                     dose += (state.seedActivity * ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F * df) / 100;
                 });
                 res[k] = dose;
             }
-            
-            if (state.calcDriver === 'activity') {
-                state.targetDose = res.rx;
-                el.targetDoseInput.value = res.rx.toFixed(1);
-            }
-
+            state.results = res;
+            if (state.calcDriver === 'activity') { state.targetDose = res.rx; el.targetDoseInput.value = res.rx.toFixed(1); }
             el.doseRx.textContent = res.rx.toFixed(2);
             el.doseRxLabel.textContent = `(${state.tumorHeight}mm)`;
             updateTableDisplay(res);
-            renderPhysicsTable(active, pts_coords.rx, gref, df);
+            renderPhysicsTable(active, pts_coords.rx, gref, df, isPoint);
+            if (state.activeTab === 'plaque') drawPlaque();
+            else { calculateDoseGrid(active, df, isPoint, gref); requestAnimationFrame(renderDoseCanvas); }
         }
 
-        function updateTableDisplay(results) {
-            const pts = [
-                { id: 'ext_sclera', name: 'External Sclera (-1mm)' },
-                { id: 'sclera', name: 'Inner Sclera (0mm)' },
-                { id: 'coms_5mm', name: 'COMS Reference (5mm)' },
-                { id: 'eye_origin', name: 'Eye Origin (11mm)' },
-                { id: 'opp_retina', name: 'Opposite Retina (22mm)' },
-                { id: 'rx', name: 'Rx Point' }
-            ];
-            el.comparisonRows.innerHTML = pts.map(pt => `
-                <tr class="hover:bg-green-100/30 transition-colors">
-                    <td class="py-1.5 px-1 text-[11px] font-semibold text-gray-700 leading-tight">${pt.name}</td>
-                    <td class="py-1.5 px-1 text-[14px] font-mono font-semibold text-right text-gray-800" id="comp-calc-${pt.id}">${results[pt.id].toFixed(2)}</td>
-                    <td class="py-1.5 px-1 text-center">
-                        <input type="text" value="${state.tpsValues[pt.id] || ''}" class="w-16 text-right p-0.5 text-[13px] font-mono font-bold border border-green-200 rounded bg-white focus:ring-1 focus:ring-green-400 outline-none tps-input" data-id="${pt.id}" >
-                    </td>
-                    <td class="py-1.5 px-1 text-right text-[12px] font-black" id="comp-diff-${pt.id}">${calculateError(results[pt.id], state.tpsValues[pt.id])}</td>
-                </tr>
-            `).join('');
-            document.querySelectorAll('.tps-input').forEach(i => i.addEventListener('input', e => { 
-                const id = e.target.dataset.id;
-                const val = e.target.value.replace(/[^0-9.]/g, ''); 
-                state.tpsValues[id] = parseFloat(val) || 0; 
-                const calcVal = parseFloat(document.getElementById(`comp-calc-${id}`).textContent);
-                document.getElementById(`comp-diff-${id}`).innerHTML = calculateError(calcVal, state.tpsValues[id]);
-            }));
-        }
-
-        function calculateError(calc, tps) {
-            if (tps > 0 && calc >= 0) {
-                const diff = ((calc - tps) / tps) * 100;
-                return `<span class="${Math.abs(diff) <= 5 ? 'text-green-600' : 'text-red-600'}">${(diff > 0 ? "+" : "") + diff.toFixed(1)}%</span>`;
+        function calculateDoseGrid(active, df, isPoint, gref) {
+            doseGrid = [];
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                doseGrid[i] = [];
+                const x = VIEW_X_RANGE[0] + (i / GRID_SIZE) * (VIEW_X_RANGE[1] - VIEW_X_RANGE[0]);
+                for (let j = 0; j <= GRID_SIZE; j++) {
+                    const z = VIEW_Z_RANGE[0] + (j / GRID_SIZE) * (VIEW_Z_RANGE[1] - VIEW_Z_RANGE[0]);
+                    const pt = { x: x/10, y: 0, z: z/10 };
+                    let dose = 0;
+                    active.forEach(s => {
+                        const r = Math.sqrt((pt.x - s.x/10)**2 + (pt.y - s.y/10)**2 + (pt.z - s.z/10)**2);
+                        const g = calculate_g(r, isPoint);
+                        let G, F;
+                        if (isPoint) { G = 1/r**2; F = 1; }
+                        else { G = calculate_G_line(r, pt, s); F = get_F(r, get_Theta_Deg(r, pt, s), false); }
+                        dose += (state.seedActivity * ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F * df) / 100;
+                    });
+                    doseGrid[i][j] = dose;
+                }
             }
-            return '<span class="text-gray-400">-</span>';
+            cacheContourPaths();
         }
 
-        function renderPhysicsTable(seeds, p, gref, df) {
-            let html = '', total = 0;
-            seeds.forEach(s => {
-                const r = Math.sqrt((p.x - s.x/10)**2 + (p.y - s.y/10)**2 + (p.z - s.z/10)**2);
-                const g = calculate_g(r); let G, F, tv;
-                if (state.calcMode === 'point') { G = 1/r**2; F = 1; tv = 90; }
-                else { G = calculate_G_line(r, p, s); tv = get_Theta_Deg(r, p, s); F = get_F(r, tv); }
-                const dose = (state.seedActivity * ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F * df) / 100;
-                total += dose;
-                html += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="py-2 px-3">${s.displayId}</td><td class="py-2 px-3 text-gray-400 font-mono">${s.x.toFixed(2)}</td><td class="py-2 px-3 text-gray-400 font-mono">${s.y.toFixed(2)}</td><td class="py-2 px-3 text-gray-400 font-mono">${s.z.toFixed(2)}</td><td class="py-2 px-3 font-medium font-mono">${(r * 10).toFixed(3)}</td><td class="py-2 px-3 text-gray-500 font-mono">${tv.toFixed(1)}</td><td class="py-2 px-3 font-bold text-green-600 font-mono">${g.toFixed(4)}</td><td class="py-2 px-3 font-mono">${G.toFixed(4)}</td><td class="py-2 px-3 font-bold text-blue-600 font-mono">${F.toFixed(4)}</td><td class="py-2 px-3 font-bold text-gray-800 font-mono">${dose.toFixed(4)}</td></tr>`;
+        function cacheContourPaths() {
+            cachedPaths = [];
+            const levels = [{ val: state.targetDose, color: '#dc2626' }, { val: state.targetDose*0.5, color: '#f97316' }, { val: state.targetDose*0.25, color: '#eab308' }, { val: state.targetDose*0.10, color: '#22c55e' }];
+            levels.forEach(lvl => {
+                const path = new Path2D();
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        const x1 = i, x2 = i + 1, y1 = j, y2 = j + 1;
+                        const d1 = doseGrid[x1][y1], d2 = doseGrid[x2][y1], d3 = doseGrid[x2][y2], d4 = doseGrid[x1][y2];
+                        const toW = (idxX, idxZ) => ({ x: VIEW_X_RANGE[0]+(idxX/GRID_SIZE)*(VIEW_X_RANGE[1]-VIEW_X_RANGE[0]), z: VIEW_Z_RANGE[0]+(idxZ/GRID_SIZE)*(VIEW_Z_RANGE[1]-VIEW_Z_RANGE[0]) });
+                        const interp = (p1, p2, v1, v2) => p1 + (lvl.val - v1) * (p2 - p1) / (v2 - v1);
+                        const lines = [];
+                        if ((d1 < lvl.val) !== (d2 < lvl.val)) lines.push(toW(interp(x1, x2, d1, d2), y1));
+                        if ((d2 < lvl.val) !== (d3 < lvl.val)) lines.push(toW(x2, interp(y1, y2, d2, d3)));
+                        if ((d3 < lvl.val) !== (d4 < lvl.val)) lines.push(toW(interp(x2, x1, d3, d4), y2));
+                        if ((d4 < lvl.val) !== (d1 < lvl.val)) lines.push(toW(x1, interp(y2, y1, d4, d1)));
+                        if (lines.length >= 2) { path.moveTo(lines[0].x, lines[0].z); for (let k=1; k<lines.length; k++) path.lineTo(lines[k].x, lines[k].z); }
+                    }
+                }
+                cachedPaths.push({ path, color: lvl.color });
+            });
+        }
+
+        function renderDoseCanvas() {
+            if (!el.canvasDose || !doseGrid) return;
+            const ctx = el.canvasDose.getContext('2d'), w = el.canvasDose.width, h = el.canvasDose.height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.save();
+            ctx.translate(w/2 + viewport.offset.x, h/2 + viewport.offset.y);
+            ctx.scale(viewport.scale, -viewport.scale); // Flip Z for up
+            ctx.translate(0, -11); // Center on eye center
+            
+            const visW = w/viewport.scale, visH = h/viewport.scale;
+            const bMinX = -visW, bMaxX = visW, bMinZ = -visH+11, bMaxZ = visH+11;
+
+            // Grids
+            ctx.lineWidth = 1/viewport.scale;
+            ctx.strokeStyle = '#f1f5f9'; ctx.beginPath(); for(let x=Math.floor(bMinX);x<=Math.ceil(bMaxX);x++) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ);z<=Math.ceil(bMaxZ);z++) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+            ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); for(let x=Math.floor(bMinX/10)*10;x<=Math.ceil(bMaxX/10)*10;x+=10) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ/10)*10;z<=Math.ceil(bMaxZ/10)*10;z+=10) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+
+            // Black Axes
+            ctx.strokeStyle = '#000000'; ctx.lineWidth = 1.5/viewport.scale; ctx.beginPath(); ctx.moveTo(0,bMinZ); ctx.lineTo(0,bMaxZ); ctx.moveTo(bMinX,0); ctx.lineTo(bMaxX,0); ctx.stroke();
+            
+            // Ticks
+            ctx.fillStyle = '#000000'; ctx.font = `bold ${10/viewport.scale}px sans-serif`;
+            for (let v=-30; v<=30; v+=5) {
+                if (v===0) continue;
+                ctx.beginPath(); ctx.moveTo(v, -2/viewport.scale); ctx.lineTo(v, 2/viewport.scale); ctx.stroke(); // X
+                ctx.beginPath(); ctx.moveTo(-2/viewport.scale, v); ctx.lineTo(2/viewport.scale, v); ctx.stroke(); // Z
+                ctx.save(); ctx.scale(1,-1); ctx.textAlign='center'; ctx.fillText(v.toString(), v, 12/viewport.scale); ctx.textAlign='right'; ctx.fillText(v.toString(), -5/viewport.scale, -v+3/viewport.scale); ctx.restore();
+            }
+            ctx.save(); ctx.scale(1,-1); ctx.fillStyle='#64748b'; ctx.fillText("mm", 15/viewport.scale, -20/viewport.scale); ctx.restore();
+
+            // Anatomy (Transparent)
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1/viewport.scale; ctx.beginPath(); ctx.arc(0,11,12,0,2*Math.PI); ctx.stroke(); ctx.beginPath(); ctx.arc(0,11,11,0,2*Math.PI); ctx.stroke();
+            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3/viewport.scale; ctx.beginPath(); const arcLen = (state.size/2)/12; ctx.arc(0,11,12.2,-Math.PI/2-arcLen,-Math.PI/2+arcLen); ctx.stroke();
+
+            // Isodoses
+            ctx.lineWidth = 2/viewport.scale; if (cachedPaths) cachedPaths.forEach(cp => { ctx.strokeStyle = cp.color; ctx.stroke(cp.path); });
+
+            // Ref Points
+            const refPts = [{z:-1},{z:0},{z:5},{z:11},{z:22},{z:state.tumorHeight}];
+            ctx.fillStyle = '#334155'; refPts.forEach(pt => { ctx.beginPath(); ctx.arc(0, pt.z, 0.4, 0, 2*Math.PI); ctx.fill(); });
+            
+            // Rx Arrow
+            const ax = 2.5; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5/viewport.scale; ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,state.tumorHeight); ctx.stroke();
+            const hs = 1.2; ctx.beginPath(); ctx.moveTo(ax-hs/2,state.tumorHeight-hs); ctx.lineTo(ax,state.tumorHeight); ctx.lineTo(ax+hs/2,state.tumorHeight-hs); ctx.moveTo(ax-hs/2,hs); ctx.lineTo(ax,0); ctx.lineTo(ax+hs/2,hs); ctx.stroke();
+            ctx.save(); ctx.scale(1,-1); ctx.textAlign='left'; ctx.fillText(`${state.tumorHeight.toFixed(1)} mm`, ax+2/viewport.scale, -state.tumorHeight/2+3/viewport.scale); ctx.restore();
+            
+            ctx.restore();
+        }
+
+        function setupCanvasInteraction() {
+            const canvas = el.canvasDose, tooltip = document.getElementById('canvas-tooltip');
+            canvas.addEventListener('wheel', e => { e.preventDefault(); const factor = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.1); viewport.scale *= factor; requestAnimationFrame(renderDoseCanvas); });
+            canvas.addEventListener('mousedown', e => { viewport.isDragging = true; viewport.last = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; });
+            window.addEventListener('mouseup', () => { viewport.isDragging = false; canvas.style.cursor = 'move'; });
+            canvas.addEventListener('mousemove', e => {
+                if (viewport.isDragging) { viewport.offset.x += e.clientX-viewport.last.x; viewport.offset.y += e.clientY-viewport.last.y; viewport.last = { x: e.clientX, y: e.clientY }; requestAnimationFrame(renderDoseCanvas); }
+                const rect = canvas.getBoundingClientRect(), mx = e.clientX-rect.left, my = e.clientY-rect.top;
+                tooltip.style.left = (mx + 12) + 'px'; tooltip.style.top = (my + 12) + 'px';
+                const cx = canvas.width/2 + viewport.offset.x, cy = canvas.height/2 + viewport.offset.y;
+                const wx = (mx-cx)/viewport.scale, wz = -((my-cy)/viewport.scale)+11;
+                const refs = [-1,0,5,11,22,state.tumorHeight]; let found = null;
+                for (let z of refs) { if (Math.sqrt(wx*wx+(wz-z)**2) < 1.0) { found = z; break; } }
+                if (found !== null && state.results) {
+                    let v = 0; if(Math.abs(found-(-1))<0.1) v=state.results.ext_sclera; else if(Math.abs(found-0)<0.1) v=state.results.sclera; else if(Math.abs(found-5)<0.1) v=state.results.coms_5mm; else if(Math.abs(found-11)<0.1) v=state.results.eye_origin; else if(Math.abs(found-22)<0.1) v=state.results.opp_retina; else v=state.results.rx;
+                    tooltip.style.display = 'block'; tooltip.innerHTML = `<strong>Z = ${found.toFixed(1)} mm</strong><br>Dose: ${v.toFixed(2)} Gy`;
+                } else { tooltip.style.display = 'none'; }
+            });
+        }
+
+        // --- UTILS ---
+        function updateTableDisplay(results) {
+            const pts = [{ id: 'ext_sclera', name: 'External Sclera (-1mm)' }, { id: 'sclera', name: 'Inner Sclera (0mm)' }, { id: 'coms_5mm', name: 'COMS Reference (5mm)' }, { id: 'eye_origin', name: 'Eye Origin (11mm)' }, { id: 'opp_retina', name: 'Opposite Retina (22mm)' }, { id: 'rx', name: 'Rx Point' }];
+            el.comparisonRows.innerHTML = pts.map(pt => `<tr class="hover:bg-green-100/30 transition-colors"><td class="py-1.5 px-1 text-[11px] font-semibold text-gray-700 leading-tight">${pt.name}</td><td class="py-1.5 px-1 text-[14px] font-mono font-semibold text-right text-gray-800" id="comp-calc-${pt.id}">${results[pt.id].toFixed(2)}</td><td class="py-1.5 px-1 text-center"><input type="text" value="${state.tpsValues[pt.id] || ''}" class="w-16 text-right p-0.5 text-[13px] font-mono font-bold border border-green-200 rounded bg-white focus:ring-1 focus:ring-green-400 outline-none tps-input" data-id="${pt.id}"></td><td class="py-1.5 px-1 text-right text-[12px] font-black" id="comp-diff-${pt.id}">${calculateError(results[pt.id], state.tpsValues[pt.id])}</td></tr>`).join('');
+            document.querySelectorAll('.tps-input').forEach(i => i.addEventListener('input', e => { const id = e.target.dataset.id; state.tpsValues[id] = parseFloat(e.target.value) || 0; document.getElementById(`comp-diff-${id}`).innerHTML = calculateError(parseFloat(document.getElementById(`comp-calc-${id}`).textContent), state.tpsValues[id]); }));
+        }
+
+        function calculateError(calc, tps) { if (tps > 0) { const diff = ((calc-tps)/tps)*100; return `<span class="${Math.abs(diff)<=5 ? 'text-green-600' : 'text-red-600'}">${(diff>0?"+":"")+diff.toFixed(1)}%</span>`; } return '<span class="text-gray-400">-</span>'; }
+
+        function renderPhysicsTable(seeds, p, gref, df, isPoint) {
+            let html = '', total = 0; seeds.forEach(s => {
+                const r = Math.sqrt((p.x-s.x/10)**2+(p.y-s.y/10)**2+(p.z-s.z/10)**2), g = calculate_g(r, isPoint);
+                let G, F, tv = isPoint?90:get_Theta_Deg(r,p,s); if(isPoint){G=1/r**2;F=1;}else{G=calculate_G_line(r,p,s);F=get_F(r,tv,false);}
+                const dose = (state.seedActivity * ISOTOPE_CONSTANTS.Lambda * (G/gref) * g * F * df) / 100; total += dose;
+                html += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="py-2 px-3">${s.displayId}</td><td class="py-2 px-3 font-mono text-gray-400">${s.x.toFixed(2)}</td><td class="py-2 px-3 font-mono text-gray-400">${s.y.toFixed(2)}</td><td class="py-2 px-3 font-mono text-gray-400">${s.z.toFixed(2)}</td><td class="py-2 px-3 font-mono">${(r*10).toFixed(3)}</td><td class="py-2 px-3 font-mono">${tv.toFixed(1)}</td><td class="py-2 px-3 font-mono font-bold text-green-600">${g.toFixed(4)}</td><td class="py-2 px-3 font-mono">${G.toFixed(4)}</td><td class="py-2 px-3 font-mono font-bold text-blue-600">${F.toFixed(4)}</td><td class="py-2 px-3 font-mono font-bold">${dose.toFixed(4)}</td></tr>`;
             });
             el.tableBody.innerHTML = html; el.tableTotal.textContent = total.toFixed(4) + " Gy";
         }
 
-        // --- RESET FUNCTION ---
-        function resetApp() {
-            state.size = 16;
-            state.isNotched = false;
-            state.calcMode = 'line';
-            state.duration = 101.0;
-            state.tumorHeight = 5.0;
-            state.seedActivity = 0.00;
-            state.targetDose = 85.0; // Reset to 85.0
-            state.calcDriver = 'dose'; // Ensure it recalculates Activity from Dose on reset
-            Object.keys(state.tpsValues).forEach(k => state.tpsValues[k] = 0);
-
-            el.manualDuration.value = "101.0";
-            el.seedActivity.value = "0.00";
-            el.targetDoseInput.value = "85.0";
-            el.tumorHeight.value = "5.0";
-            el.plaqueSize.value = "16";
-            
-            document.querySelector('input[name="shape"][value="round"]').checked = true;
-            document.querySelector('input[name="calcMode"][value="line"]').checked = true;
-            el.radioNotched.disabled = false;
-            el.labelNotched.classList.remove('opacity-50');
-
-            const now = new Date(); const dayOfWeek = now.getDay(); 
-            const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
-            const targetMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + 21);
-            const y = targetMonday.getFullYear(), m = String(targetMonday.getMonth() + 1).padStart(2, '0'), d = String(targetMonday.getDate()).padStart(2, '0');
-            el.implantDate.value = `${y}-${m}-${d}T08:30`;
-            setInputMode('duration');
-
-            calculateAll();
-            drawPlaque();
-        }
-
-        // --- DRAWING FUNCTIONS ---
-        function drawPlaque() {
-            if (!el.canvas) return;
-            const ctx = el.canvas.getContext('2d'); const w = el.canvas.width, h = el.canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            const { active, removed } = getProcessedSeeds();
-            const cx = w / 2; 
-            const cy = 210; 
-            const scale = 18; 
-            
-            ctx.beginPath(); ctx.arc(cx, cy, (state.size/2)*scale, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill(); ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
-            if (removed) drawSeed(ctx, removed, cx, cy, scale, true); 
-            active.forEach(s => drawSeed(ctx, s, cx, cy, scale, false));
-            
-            if (el.plaqueDescLabel) {
-                el.plaqueDescLabel.textContent = `${state.size}mm COMS (${state.isNotched ? 'Notched' : 'Round'})`;
-            }
-            if (el.plaqueSeedCount) {
-                el.plaqueSeedCount.textContent = `Seeds: ${active.length}`;
-            }
-        }
-
-        function drawSeed(ctx, s, cx, cy, scale, isRem) {
-            const px = cx + s.x * scale, py = cy - s.y * scale;
-            ctx.save(); ctx.translate(px, py); 
-            ctx.rotate(Math.atan2(-(s.ends[1].y - s.ends[0].y), s.ends[1].x - s.ends[0].x));
-            ctx.beginPath(); ctx.moveTo(-1.8 * scale, 0); ctx.lineTo(1.8 * scale, 0); ctx.lineCap = 'round'; 
-            ctx.lineWidth = Math.max(9, scale * 0.6); 
-            ctx.strokeStyle = isRem ? '#ef4444' : '#9ca3af'; ctx.stroke(); ctx.restore();
-            if (!isRem) {
-                const radius = Math.max(11, scale * 0.8); 
-                ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill(); ctx.strokeStyle = 'blue'; ctx.lineWidth = 1; ctx.stroke();
-                const fontSize = Math.max(13, scale * 1);
-                ctx.fillStyle = 'blue'; ctx.font = `bold ${fontSize}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.displayId, px, py);
-            }
-        }
-
         function getProcessedSeeds() {
-            let seeds = [...TG129_DATA[state.size]]; let removed = null;
-            if (state.isNotched && NOTCH_REMOVAL_MAP[state.size]) {
-                const target = NOTCH_REMOVAL_MAP[state.size];
-                removed = seeds.find(s => s.id === target);
-                seeds = seeds.filter(s => s.id !== target).map((s, idx) => ({ ...s, displayId: idx + 1 }));
-            } else { seeds = seeds.map(s => ({ ...s, displayId: s.id })); }
+            const baseData = state.dataset === 'ps' ? PS_DATA : TG129_DATA;
+            let seeds = JSON.parse(JSON.stringify(baseData[state.size])), removed = null;
+            const rad = state.rotation * Math.PI / 180;
+            seeds.forEach(s => {
+                const nx = s.x*Math.cos(rad)-s.y*Math.sin(rad), ny = s.x*Math.sin(rad)+s.y*Math.cos(rad); s.x=nx; s.y=ny;
+                if(s.ends) s.ends.forEach(e => { const ex=e.x*Math.cos(rad)-e.y*Math.sin(rad), ey=e.x*Math.sin(rad)+e.y*Math.cos(rad); e.x=ex; e.y=ey; });
+            });
+            if (state.isNotched && NOTCH_REMOVAL_MAP[state.size]) { const t = NOTCH_REMOVAL_MAP[state.size]; removed = seeds.find(s=>s.id===t); seeds = seeds.filter(s=>s.id!==t).map((s,i)=>({...s,displayId:i+1})); }
+            else seeds = seeds.map(s => ({...s, displayId:s.id}));
             return { active: seeds, removed };
         }
 
-        function setInputMode(mode) {
-            state.inputMode = mode;
-            if (mode === 'duration') {
-                el.modeContentDuration.classList.remove('hidden'); el.modeContentDates.classList.add('hidden');
-                el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none";
-                el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none";
-            } else {
-                el.modeContentDuration.classList.add('hidden'); el.modeContentDates.classList.remove('hidden');
-                el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none";
-                el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none";
-                syncDatesFromDuration();
+        function drawPlaque() {
+            if (!el.canvasPlaque) return;
+            const ctx = el.canvasPlaque.getContext('2d'), w = el.canvasPlaque.width, h = el.canvasPlaque.height;
+            ctx.clearRect(0, 0, w, h); const { active, removed } = getProcessedSeeds(); const cx = w/2, cy = h/2, sc = 12;
+            ctx.beginPath(); ctx.arc(cx, cy, (state.size/2)*sc, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill(); ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
+            if (removed) drawSeedIcon(ctx, removed, cx, cy, sc, true);
+            active.forEach(s => drawSeedIcon(ctx, s, cx, cy, sc, false));
+            el.plaqueDescLabel.textContent = `${state.size}mm COMS (${state.isNotched ? 'Notched' : 'Round'}) [${state.dataset.toUpperCase()}]`;
+        }
+
+        function drawSeedIcon(ctx, s, cx, cy, sc, isRem) {
+            const px = cx+s.x*sc, py = cy-s.y*sc;
+            if (state.model === 'line' && s.ends) {
+                ctx.save(); ctx.translate(px, py); ctx.rotate(Math.atan2(-(s.ends[1].y-s.ends[0].y), s.ends[1].x-s.ends[0].x));
+                ctx.beginPath(); ctx.moveTo(-1.8*sc, 0); ctx.lineTo(1.8*sc, 0); ctx.lineCap = 'round'; ctx.lineWidth = Math.max(6, sc*0.6); ctx.strokeStyle = isRem ? '#ef4444' : '#9ca3af'; ctx.stroke(); ctx.restore();
             }
+            if (!isRem) {
+                const r = Math.max(8, sc*0.8); ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); ctx.strokeStyle = 'blue'; ctx.stroke();
+                ctx.fillStyle = 'blue'; ctx.font = `bold ${r}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.displayId, px, py);
+            } else if (state.model === 'point') { ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill(); }
         }
 
-        function handleManualDurationChange(e) {
-            const val = parseFloat(e.target.value);
-            if (!isNaN(val) && val >= 0) { state.duration = val; syncDatesFromDuration(); updateDecayFactor(); calculateAll(); }
+        function setInputMode(m) {
+            state.inputMode = m;
+            if (m === 'duration') { el.modeContentDuration.classList.remove('hidden'); el.modeContentDates.classList.add('hidden'); el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none"; el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none"; }
+            else { el.modeContentDuration.classList.add('hidden'); el.modeContentDates.classList.remove('hidden'); el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none"; el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none"; if(el.implantDate.value && state.duration>=0){const end=new Date(new Date(el.implantDate.value).getTime()+state.duration*3600000); el.removalDate.value=end.toISOString().slice(0,16);} }
         }
 
-        function handleDateChange() {
-            if (el.implantDate.value && el.removalDate.value) {
-                const diffMs = new Date(el.removalDate.value) - new Date(el.implantDate.value);
-                state.duration = Math.max(0, diffMs / (1000 * 60 * 60));
-                el.manualDuration.value = state.duration.toFixed(1);
-                updateDecayFactor(); calculateAll();
-            }
-        }
-
-        function syncDatesFromDuration() {
-            if (el.implantDate.value && state.duration >= 0) {
-                const end = new Date(new Date(el.implantDate.value).getTime() + state.duration * 60 * 60 * 1000);
-                const ry = end.getFullYear(), rm = String(end.getMonth() + 1).padStart(2, '0'), rd = String(end.getDate()).padStart(2, '0'), rh = String(end.getHours()).padStart(2, '0'), rmin = String(end.getMinutes()).padStart(2, '0');
-                el.removalDate.value = `${ry}-${rm}-${rd}T${rh}:${rmin}`;
-            }
-        }
-
-        function updateDecayFactor() {
-            const lambda = Math.LN2 / (ISOTOPE_CONSTANTS.HalfLife * 24.0);
-            const df = state.duration > 0 ? (1 - Math.exp(-lambda * state.duration)) / lambda : 0;
-            el.decayFactorDisplay.textContent = df.toFixed(3) + ' h';
-            el.dateModeDurationDisplay.textContent = state.duration.toFixed(1) + ' h';
-        }
-
-        function handlePlaqueSizeChange(e) {
-            const val = parseInt(e.target.value);
-            if (TG129_DATA[val]) {
-                state.size = val;
-                if (val === 10) { state.isNotched = false; document.querySelector('input[value="round"]').checked = true; el.radioNotched.disabled = true; el.labelNotched.classList.add('opacity-50'); }
-                else { el.radioNotched.disabled = false; el.labelNotched.classList.remove('opacity-50'); }
-                calculateAll(); drawPlaque();
-            }
+        function switchLayout(mode) {
+            const colR = document.getElementById('col-results'), colV = document.getElementById('col-vis');
+            if (mode === 'dose') { colR.classList.add('hidden'); colV.classList.replace('lg:col-span-3', 'lg:col-span-7'); document.getElementById('view-plaque').classList.add('hidden'); document.getElementById('view-dose').classList.remove('hidden'); }
+            else { colR.classList.remove('hidden'); colV.classList.replace('lg:col-span-7', 'lg:col-span-3'); document.getElementById('view-plaque').classList.remove('hidden'); document.getElementById('view-dose').classList.add('hidden'); }
+            setTimeout(() => { const w = document.getElementById('dose-canvas-wrapper'); el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; calculateAll(); }, 50);
         }
 
         function init() {
             el = {
-                btnModeDuration: document.getElementById('btn-mode-duration'),
-                btnModeDates: document.getElementById('btn-mode-dates'),
-                modeContentDuration: document.getElementById('mode-content-duration'),
-                modeContentDates: document.getElementById('mode-content-dates'),
-                manualDuration: document.getElementById('manualDuration'),
-                dateModeDurationDisplay: document.getElementById('dateModeDurationDisplay'),
-                implantDate: document.getElementById('implantDate'),
-                removalDate: document.getElementById('removalDate'),
-                decayFactorDisplay: document.getElementById('decayFactorDisplay'),
-                seedActivity: document.getElementById('seedActivity'),
-                targetDoseInput: document.getElementById('targetDoseInput'),
-                btnReset: document.getElementById('btn-reset'),
-                tumorHeight: document.getElementById('tumorHeight'),
-                plaqueSize: document.getElementById('plaqueSize'),
-                radioNotched: document.getElementById('radioNotched'),
-                labelNotched: document.getElementById('labelNotched'),
-                notchLegend: document.getElementById('notchLegend'),
-                doseRx: document.getElementById('dose-rx'),
-                doseRxLabel: document.getElementById('dose-rx-label'),
-                toggleTableBtn: document.getElementById('toggleTableBtn'),
-                tableContainer: document.getElementById('detailedTableContainer'),
-                tableBody: document.getElementById('detailedTableBody'),
-                tableTotal: document.getElementById('detailedTableTotal'),
-                canvas: document.getElementById('plaqueCanvas'),
-                comparisonRows: document.getElementById('comparison-rows'),
-                plaqueDescLabel: document.getElementById('plaque-desc-label'),
-                plaqueSeedCount: document.getElementById('plaque-seed-count')
+                btnModeDuration: document.getElementById('btn-mode-duration'), btnModeDates: document.getElementById('btn-mode-dates'), modeContentDuration: document.getElementById('mode-content-duration'), modeContentDates: document.getElementById('mode-content-dates'),
+                manualDuration: document.getElementById('manualDuration'), dateModeDurationDisplay: document.getElementById('dateModeDurationDisplay'), implantDate: document.getElementById('implantDate'), removalDate: document.getElementById('removalDate'),
+                decayFactorDisplay: document.getElementById('decayFactorDisplay'), seedActivity: document.getElementById('seedActivity'), targetDoseInput: document.getElementById('targetDoseInput'), btnReset: document.getElementById('btn-reset'),
+                tumorHeight: document.getElementById('tumorHeight'), plaqueSize: document.getElementById('plaqueSize'), radioNotched: document.getElementById('radioNotched'), labelNotched: document.getElementById('labelNotched'),
+                doseRx: document.getElementById('dose-rx'), doseRxLabel: document.getElementById('dose-rx-label'), toggleTableBtn: document.getElementById('toggleTableBtn'), tableContainer: document.getElementById('detailedTableContainer'),
+                tableBody: document.getElementById('detailedTableBody'), tableTotal: document.getElementById('detailedTableTotal'), canvasPlaque: document.getElementById('plaqueCanvas'), canvasDose: document.getElementById('doseCanvas'),
+                comparisonRows: document.getElementById('comparison-rows'), plaqueDescLabel: document.getElementById('plaque-desc-label'), tabPlaque: document.getElementById('tab-plaque'), tabDose: document.getElementById('tab-dose'),
+                rotateCw: document.getElementById('rotate-cw'), rotateCcw: document.getElementById('rotate-ccw'), rotationDisplay: document.getElementById('rotation-val')
             };
 
-            const now = new Date(); const dayOfWeek = now.getDay(); 
-            const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
-            const targetMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + 21);
-            const y = targetMonday.getFullYear(), m = String(targetMonday.getMonth() + 1).padStart(2, '0'), d = String(targetMonday.getDate()).padStart(2, '0');
-            el.implantDate.value = `${y}-${m}-${d}T08:30`;
-            
-            // 초기 설정: Rx Dose 85, Activity 0 (추후 자동 계산됨)
-            state.duration = 101.0; el.manualDuration.value = "101.0";
-            state.targetDose = 85.0; el.targetDoseInput.value = "85.0";
-            state.seedActivity = 0.00; el.seedActivity.value = "0.00";
-            state.calcDriver = 'dose';
-
-            el.btnModeDuration.addEventListener('click', () => setInputMode('duration'));
-            el.btnModeDates.addEventListener('click', () => setInputMode('dates'));
-            el.manualDuration.addEventListener('input', handleManualDurationChange);
-            el.implantDate.addEventListener('input', handleDateChange);
-            el.removalDate.addEventListener('input', handleDateChange);
-            
-            el.seedActivity.addEventListener('input', e => { 
-                state.calcDriver = 'activity';
-                calculateAll(); 
-            });
-            el.seedActivity.addEventListener('focus', () => { state.calcDriver = 'activity'; });
-
-            el.targetDoseInput.addEventListener('input', e => { 
-                state.calcDriver = 'dose';
-                state.targetDose = parseFloat(e.target.value) || 0; 
-                calculateAll(); 
-            });
-            el.targetDoseInput.addEventListener('focus', () => { state.calcDriver = 'dose'; });
-
+            const now = new Date(), d = (now.getDay()===0?-6:1-now.getDay())+21; const target = new Date(now.getFullYear(), now.getMonth(), now.getDate()+d); el.implantDate.value = target.toISOString().slice(0,10)+"T08:30";
+            el.btnModeDuration.addEventListener('click', () => setInputMode('duration')); el.btnModeDates.addEventListener('click', () => setInputMode('dates'));
+            el.manualDuration.addEventListener('input', e => { state.duration = parseFloat(e.target.value) || 0; calculateAll(); });
+            el.implantDate.addEventListener('input', () => { if(el.implantDate.value && el.removalDate.value){ state.duration = (new Date(el.removalDate.value)-new Date(el.implantDate.value))/3600000; el.manualDuration.value = state.duration.toFixed(1); calculateAll(); } });
+            el.removalDate.addEventListener('input', () => { if(el.implantDate.value && el.removalDate.value){ state.duration = (new Date(el.removalDate.value)-new Date(el.implantDate.value))/3600000; el.manualDuration.value = state.duration.toFixed(1); calculateAll(); } });
+            el.seedActivity.addEventListener('input', () => { state.calcDriver = 'activity'; calculateAll(); });
+            el.targetDoseInput.addEventListener('input', e => { state.calcDriver = 'dose'; state.targetDose = parseFloat(e.target.value) || 0; calculateAll(); });
             el.tumorHeight.addEventListener('input', e => { state.tumorHeight = parseFloat(e.target.value) || 0; calculateAll(); });
-            el.plaqueSize.addEventListener('change', handlePlaqueSizeChange);
-            el.btnReset.addEventListener('click', resetApp);
+            el.plaqueSize.addEventListener('change', e => { state.size = parseInt(e.target.value); calculateAll(); });
+            el.btnReset.addEventListener('click', () => location.reload());
+            document.getElementsByName('shape').forEach(r => r.addEventListener('change', e => { state.isNotched = (e.target.value === 'notched'); calculateAll(); }));
+            document.getElementsByName('modelType').forEach(r => r.addEventListener('change', e => { state.model = e.target.value; calculateAll(); }));
+            document.getElementsByName('coordDataset').forEach(r => r.addEventListener('change', e => { state.dataset = e.target.value; calculateAll(); }));
+            el.tabPlaque.addEventListener('click', () => { state.activeTab = 'plaque'; el.tabPlaque.classList.add('active'); el.tabDose.classList.remove('active'); switchLayout('plaque'); });
+            el.tabDose.addEventListener('click', () => { state.activeTab = 'dose'; el.tabDose.classList.add('active'); el.tabPlaque.classList.remove('active'); switchLayout('dose'); });
+            el.rotateCw.addEventListener('click', () => { state.rotation = (state.rotation + 10) % 360; el.rotationDisplay.textContent = state.rotation + "°"; calculateAll(); });
+            el.rotateCcw.addEventListener('click', () => { state.rotation = (state.rotation - 10 + 360) % 360; el.rotationDisplay.textContent = state.rotation + "°"; calculateAll(); });
+            el.toggleTableBtn.addEventListener('click', () => { state.showTable = !state.showTable; el.tableContainer.classList.toggle('hidden'); el.toggleTableBtn.textContent = state.showTable ? "Hide Detailed Physics Check" : "Show Detailed Physics Check"; });
 
-            document.getElementsByName('shape').forEach(r => r.addEventListener('change', e => { state.isNotched = (e.target.value === 'notched'); calculateAll(); drawPlaque(); }));
-            document.getElementsByName('calcMode').forEach(r => r.addEventListener('change', e => { state.calcMode = e.target.value; calculateAll(); }));
-            el.toggleTableBtn.addEventListener('click', () => { 
-                state.showTable = !state.showTable; el.tableContainer.classList.toggle('hidden'); 
-                el.toggleTableBtn.textContent = state.showTable ? "Hide Detailed Physics Check" : "Show Detailed Physics Check"; 
-            });
-            syncDatesFromDuration(); updateDecayFactor(); calculateAll(); drawPlaque();
+            setupCanvasInteraction(); calculateAll();
+            window.addEventListener('resize', () => { if(state.activeTab === 'dose'){ const w = document.getElementById('dose-canvas-wrapper'); el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; requestAnimationFrame(renderDoseCanvas); } });
         }
         window.onload = init;
     </script>
