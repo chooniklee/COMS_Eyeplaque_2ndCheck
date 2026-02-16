@@ -22,24 +22,29 @@
             -moz-appearance: textfield;
         }
 
-        /* Tooltip for canvas */
-        #canvas-tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
+        /* Global Tooltip Element */
+        #global-tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
             color: white;
             padding: 6px 10px;
             border-radius: 4px;
             font-size: 11px;
             pointer-events: none;
             display: none;
-            z-index: 100;
+            z-index: 9999;
             white-space: nowrap;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255,255,255,0.1);
+            transform: translate(-50%, -180%); /* Positioned well above the mouse */
         }
+        
+        #doseCanvas { cursor: default !important; }
     </style>
 </head>
 <body class="bg-gray-100 p-4 min-h-screen">
+
+    <div id="global-tooltip"></div>
 
     <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-lg space-y-4 p-6">
         
@@ -49,12 +54,11 @@
             <p class="text-sm text-gray-500">TG-43 2nd Check (IsoAid IAI-125A) | Units: Gray (Gy)</p>
         </div>
 
-        <!-- Main Content Layout - Using a 10-column grid -->
+        <!-- Main Content Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-4 items-stretch">
 
-            <!-- COLUMN 1: INPUTS (Schedule & Parameters) - 30% width (col-span-3) -->
+            <!-- COLUMN 1 -->
             <div class="lg:col-span-3 flex flex-col space-y-4">
-                <!-- Schedule Container -->
                 <div class="bg-blue-50 rounded-lg border border-blue-100 overflow-hidden flex flex-col h-[210px] shadow-sm shrink-0">
                     <div class="flex border-b border-blue-200 bg-blue-100/50 shrink-0">
                         <button id="btn-mode-duration" class="flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none">Duration</button>
@@ -64,7 +68,7 @@
                     <div class="p-3 flex flex-col flex-1 justify-between min-h-0">
                         <div id="mode-content-duration" class="block flex flex-col justify-center flex-1 space-y-1">
                             <label class="block text-[10px] font-bold text-blue-800 uppercase text-center">Total Time (Hours)</label>
-                            <input type="number" id="manualDuration" step="0.1" value="101.0" class="w-full p-1.5 text-2xl font-mono font-bold text-blue-700 text-center bg-white border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                            <input type="number" id="manualDuration" step="any" value="101.0" class="w-full p-1.5 text-2xl font-mono font-bold text-blue-700 text-center bg-white border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
 
                         <div id="mode-content-dates" class="hidden flex flex-col space-y-2 flex-1 justify-center">
@@ -91,7 +95,6 @@
                     </div>
                 </div>
 
-                <!-- Parameters Panel -->
                 <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex-1">
                     <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
                         <h3 class="text-xs font-bold text-gray-800 uppercase">Parameters</h3>
@@ -106,15 +109,18 @@
                     <div class="grid grid-cols-2 gap-x-3 gap-y-3">
                         <div class="col-span-1">
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Dose (Gy)</label>
-                            <input type="number" id="targetDoseInput" step="1.0" value="85.0" class="w-full px-2 py-1.5 text-sm font-bold text-green-700 border border-green-200 bg-green-50 rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all">
+                            <input type="number" id="targetDoseInput" step="any" value="85.0" class="w-full px-2 py-1.5 text-sm font-bold text-green-700 border border-green-200 bg-green-50 rounded-md focus:ring-2 focus:ring-green-500 outline-none transition-all">
                         </div>
                         <div class="col-span-1">
-                            <label class="block text-[12px] font-semibold text-gray-600 mb-1">Activity (U/seed)</label>
-                            <input type="number" id="seedActivity" step="0.01" value="0.00" class="w-full px-2 py-1.5 text-sm font-bold text-red-700 border border-red-200 bg-red-50/50 rounded-md focus:ring-2 focus:ring-red-500 outline-none transition-all">
+                            <div class="flex items-center gap-1 mb-1">
+                                <input type="checkbox" id="lockActivity" class="w-3 h-3 text-blue-600 rounded focus:ring-blue-500 cursor-pointer activity-helper">
+                                <label for="lockActivity" class="block text-[12px] font-semibold text-gray-600 cursor-pointer activity-helper">Activity (U/seed)</label>
+                            </div>
+                            <input type="number" id="seedActivity" step="any" value="0.00" class="w-full px-2 py-1.5 text-sm font-bold text-red-700 border border-red-200 bg-red-50/50 rounded-md focus:ring-2 focus:ring-red-500 outline-none transition-all">
                         </div>
                         <div>
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Rx Depth (mm)</label>
-                            <input type="number" id="tumorHeight" step="0.1" value="5.0" class="w-full px-2 py-1.5 text-sm border rounded-md">
+                            <input type="number" id="tumorHeight" step="any" value="5.0" class="w-full px-2 py-1.5 text-sm border rounded-md">
                         </div>
                         <div>
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Plaque Size</label>
@@ -164,7 +170,7 @@
                 </div>
             </div>
 
-            <!-- COLUMN 2: UNIFIED RESULTS - 40% width (col-span-4) -->
+            <!-- COLUMN 2: RESULTS -->
             <div id="col-results" class="lg:col-span-4 flex flex-col">
                 <div id="result-container" class="bg-green-50 rounded-lg border border-green-200 shadow-sm flex-col flex h-full overflow-hidden">
                     <div class="bg-green-100/50 border-b border-green-200 py-2 px-4 shrink-0">
@@ -182,9 +188,7 @@
                                         <th class="py-2 px-1 w-[20%] text-right font-bold">%Error</th>
                                     </tr>
                                 </thead>
-                                <tbody id="comparison-rows" class="divide-y divide-green-100">
-                                    <!-- Rows injected by JS -->
-                                </tbody>
+                                <tbody id="comparison-rows" class="divide-y divide-green-100"></tbody>
                             </table>
                         </div>
 
@@ -205,7 +209,7 @@
                 </div>
             </div>
 
-            <!-- COLUMN 3: VISUALIZATION - 30% width (col-span-3) -->
+            <!-- COLUMN 3: VISUALIZATION -->
             <div id="col-vis" class="lg:col-span-3 flex flex-col transition-all duration-300">
                 <div class="bg-gray-50 rounded-lg border border-gray-200 h-full flex flex-col overflow-hidden shadow-sm">
                     <div class="flex bg-gray-100 border-b border-gray-200 shrink-0">
@@ -233,9 +237,8 @@
                                 </div>
                             </div>
                             
-                            <div class="w-full h-full bg-white flex-1 relative overflow-hidden cursor-move" id="dose-canvas-wrapper">
+                            <div class="w-full h-full bg-white flex-1 relative overflow-hidden" id="dose-canvas-wrapper">
                                 <canvas id="doseCanvas" class="block w-full h-full"></canvas>
-                                <div id="canvas-tooltip"></div>
                             </div>
 
                             <div class="absolute bottom-2 right-2 z-10 bg-white/90 backdrop-blur border shadow-sm rounded p-2 grid grid-cols-1 gap-1">
@@ -251,7 +254,6 @@
 
         </div>
 
-        <!-- Detailed Physics Breakdown Table -->
         <div id="detailedTableContainer" class="hidden mt-6 border rounded-lg overflow-hidden shadow-md">
             <div class="bg-gray-100 px-4 py-3 border-b">
                 <h3 class="text-sm font-bold text-gray-700">Detailed Physics Check: Rx Point</h3>
@@ -320,35 +322,35 @@
             14: [{id:1,x:-5.90,y:0,z:-1.06,ends:[{x:-5.90,y:2.25,z:-1.06},{x:-5.90,y:-2.25,z:-1.06}]},{id:2,x:-2.95,y:-5.11,z:-1.06,ends:[{x:-4.90,y:-3.98,z:-1.06},{x:-1.00,y:-6.23,z:-1.06}]},{id:3,x:2.95,y:-5.11,z:-1.06,ends:[{x:1.00,y:-6.23,z:-1.06},{x:4.90,y:-3.98,z:-1.06}]},{id:4,x:5.90,y:0,z:-1.06,ends:[{x:5.90,y:-2.25,z:-1.06},{x:5.90,y:2.25,z:-1.06}]},{id:5,x:2.95,y:5.11,z:-1.06,ends:[{x:4.90,y:3.98,z:-1.06},{x:1.00,y:6.23,z:-1.06}]},{id:6,x:-2.95,y:5.11,z:-1.06,ends:[{x:-1.00,y:6.23,z:-1.06},{x:-4.90,y:3.98,z:-1.06}]},{id:7,x:-4.10,y:0,z:-1.77,ends:[{x:-4.10,y:2.25,z:-1.77},{x:-4.10,y:-2.25,z:-1.77}]},{id:8,x:0,y:-4.10,z:-1.77,ends:[{x:-2.25,y:-4.10,z:-1.77},{x:2.25,y:-4.10,z:-1.77}]},{id:9,x:4.10,y:0,z:-1.77,ends:[{x:4.10,y:-2.25,z:-1.77},{x:4.10,y:2.25,z:-1.77}]},{id:10,x:0,y:4.10,z:-1.77,ends:[{x:2.25,y:4.10,z:-1.77},{x:-2.25,y:4.10,z:-1.77}]},{id:11,x:0,y:-2.10,z:-2.24,ends:[{x:-2.25,y:-2.10,z:-2.24},{x:2.25,y:-2.10,z:-2.24}]},{id:12,x:0,y:2.10,z:-2.24,ends:[{x:2.25,y:2.10,z:-2.24},{x:-2.25,y:2.10,z:-2.24}]},{id:13,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
             16: [{id:1,x:-5.68,y:-2.73,z:-0.87,ends:[{x:-6.65,y:-0.71,z:-0.87},{x:-4.70,y:-4.76,z:-0.87}]},{id:2,x:-1.40,y:-6.14,z:-0.87,ends:[{x:-3.60,y:-5.64,z:-0.87},{x:0.79,y:-6.64,z:-0.87}]},{id:3,x:3.93,y:-4.93,z:-0.87,ends:[{x:2.17,y:-6.33,z:-0.87},{x:5.69,y:-3.52,z:-0.87}]},{id:4,x:6.30,y:0,z:-0.87,ends:[{x:6.30,y:-2.25,z:-0.87},{x:6.30,y:2.25,z:-0.87}]},{id:5,x:3.93,y:4.93,z:-0.87,ends:[{x:5.69,y:3.52,z:-0.87},{x:2.17,y:6.33,z:-0.87}]},{id:6,x:-1.40,y:6.14,z:-0.87,ends:[{x:0.79,y:6.64,z:-0.87},{x:-3.60,y:5.64,z:-0.87}]},{id:7,x:-5.68,y:2.73,z:-0.87,ends:[{x:-4.70,y:4.76,z:-0.87},{x:-6.65,y:0.71,z:-0.87}]},{id:8,x:-4.50,y:0,z:-1.64,ends:[{x:-4.50,y:2.25,z:-1.64},{x:-4.50,y:-2.25,z:-1.64}]},{id:9,x:0,y:-4.50,z:-1.64,ends:[{x:-2.25,y:-4.50,z:-1.64},{x:2.25,y:-4.50,z:-1.64}]},{id:10,x:4.50,y:0,z:-1.64,ends:[{x:4.50,y:-2.25,z:-1.64},{x:4.50,y:2.25,z:-1.64}]},{id:11,x:0,y:4.50,z:-1.64,ends:[{x:2.25,y:4.50,z:-1.64},{x:-2.25,y:4.50,z:-1.64}]},{id:12,x:0,y:-1.80,z:-2.28,ends:[{x:-2.25,y:-1.80,z:-2.28},{x:2.25,y:-1.80,z:-2.28}]},{id:13,x:0,y:1.80,z:-2.28,ends:[{x:2.25,y:1.80,z:-2.28},{x:-2.25,y:1.80,z:-2.28}]}],
             18: [{id:1,x:-7.70,y:0,z:-0.03,ends:[{x:-7.70,y:2.25,z:-0.03},{x:-7.70,y:-2.25,z:-0.03}]},{id:2,x:-5.44,y:-5.44,z:-0.03,ends:[{x:-7.04,y:-3.85,z:-0.03},{x:-3.85,y:-7.04,z:-0.03}]},{id:3,x:0,y:-7.70,z:-0.03,ends:[{x:-2.25,y:-7.70,z:-0.03},{x:2.25,y:-7.70,z:-0.03}]},{id:4,x:5.44,y:-5.44,z:-0.03,ends:[{x:3.85,y:-7.04,z:-0.03},{x:7.04,y:-3.85,z:-0.03}]},{id:5,x:7.70,y:0,z:-0.03,ends:[{x:7.70,y:-2.25,z:-0.03},{x:7.70,y:2.25,z:-0.03}]},{id:6,x:5.44,y:5.44,z:-0.03,ends:[{x:7.04,y:3.85,z:-0.03},{x:3.85,y:7.04,z:-0.03}]},{id:7,x:0,y:7.70,z:-0.03,ends:[{x:2.25,y:7.70,z:-0.03},{x:-2.25,y:7.70,z:-0.03}]},{id:8,x:-5.44,y:5.44,z:-0.03,ends:[{x:-3.85,y:7.04,z:-0.03},{x:-7.04,y:3.85,z:-0.03}]},{id:9,x:-6.20,y:0,z:-0.92,ends:[{x:-6.20,y:2.25,z:-0.92},{x:-6.20,y:-2.25,z:-0.92}]},{id:10,x:-3.10,y:-5.37,z:-0.92,ends:[{x:-5.05,y:-4.24,z:-0.92},{x:-1.15,y:-6.49,z:-0.92}]},{id:11,x:3.10,y:-5.37,z:-0.92,ends:[{x:1.15,y:-6.49,z:-0.92},{x:5.05,y:-4.24,z:-0.92}]},{id:12,x:6.20,y:0,z:-0.92,ends:[{x:6.20,y:-2.25,z:-0.92},{x:6.20,y:2.25,z:-0.92}]},{id:13,x:3.10,y:5.37,z:-0.92,ends:[{x:5.05,y:4.24,z:-0.92},{x:1.15,y:6.49,z:-0.92}]},{id:14,x:-3.10,y:5.37,z:-0.92,ends:[{x:-1.15,y:6.49,z:-0.92},{x:-5.05,y:4.24,z:-0.92}]},{id:15,x:-3.18,y:-3.18,z:-1.64,ends:[{x:-4.77,y:-1.59,z:-1.64},{x:-1.59,y:-4.77,z:-1.64}]},{id:16,x:3.18,y:-3.18,z:-1.64,ends:[{x:1.59,y:-4.77,z:-1.64},{x:4.77,y:-1.59,z:-1.64}]},{id:17,x:3.18,y:3.18,z:-1.64,ends:[{x:4.77,y:1.59,z:-1.64},{x:1.59,y:4.77,z:-1.64}]},{id:18,x:-3.18,y:3.18,z:-1.64,ends:[{x:-1.59,y:4.77,z:-1.64},{x:-4.77,y:1.59,z:-1.64}]},{id:19,x:0,y:-2.00,z:-2.25,ends:[{x:-2.25,y:-2.00,z:-2.25},{x:2.25,y:-2.00,z:-2.25}]},{id:20,x:0,y:2.00,z:-2.25,ends:[{x:2.25,y:2.00,z:-2.25},{x:-2.25,y:2.00,z:-2.25}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
-            20: [{id:1,x:-8.08,y:-2.94,z:0.64,ends:[{x:-8.85,y:-0.83,z:0.64},{x:-7.31,y:-5.06,z:0.64}]},{id:2,x:-4.30,y:-7.45,z:0.64,ends:[{x:-6.25,y:-6.32,z:0.64},{x:-2.35,y:-8.57,z:0.64}]},{id:3,x:1.49,y:-8.47,z:0.64,ends:[{x:-0.72,y:-8.86,z:0.64},{x:3.71,y:-8.08,z:0.64}]},{id:4,x:6.59,y:-5.53,z:0.64,ends:[{x:5.14,y:-7.25,z:0.64},{x:8.03,y:-3.80,z:0.64}]},{id:5,x:8.60,y:0,z:0.64,ends:[{x:8.60,y:-2.25,z:0.64},{x:8.60,y:2.25,z:0.64}]},{id:6,x:6.59,y:5.53,z:0.64,ends:[{x:8.03,y:3.80,z:0.64},{x:5.14,y:7.25,z:0.64}]},{id:7,x:1.49,y:8.47,z:0.64,ends:[{x:3.71,y:8.08,z:0.64},{x:-0.72,y:8.86,z:0.64}]},{id:8,x:-4.30,y:7.45,z:0.64,ends:[{x:-2.35,y:8.57,z:0.64},{x:-6.25,y:6.32,z:0.64}]},{id:9,x:-8.08,y:2.94,z:0.64,ends:[{x:-7.31,y:5.06,z:0.64},{x:-8.85,y:0.83,z:0.64}]},{id:10,x:-6.53,y:-1.49,z:-0.65,ends:[{x:-7.03,y:0.70,z:-0.65},{x:-6.03,y:-3.68,z:-0.65}]},{id:11,x:-2.91,y:-6.04,z:-0.65,ends:[{x:-4.93,y:-5.06,z:-0.65},{x:-0.88,y:-7.01,z:-0.65}]},{id:12,x:2.91,y:-6.04,z:-0.65,ends:[{x:0.88,y:-7.01,z:-0.65},{x:4.93,y:-5.06,z:-0.65}]},{id:13,x:6.53,y:-1.49,z:-0.65,ends:[{x:6.03,y:-3.68,z:-0.65},{x:7.03,y:0.70,z:-0.65}]},{id:14,x:5.24,y:4.18,z:-0.65,ends:[{x:6.64,y:2.42,z:-0.65},{x:3.84,y:5.94,z:-0.65}]},{id:15,x:0,y:6.70,z:-0.65,ends:[{x:2.25,y:6.70,z:-0.65},{x:-2.25,y:6.70,z:-0.65}]},{id:16,x:-5.24,y:4.18,z:-0.65,ends:[{x:-3.84,y:5.94,z:-0.65},{x:-6.64,y:2.42,z:-0.65}]},{id:17,x:-3.80,y:-2.76,z:-1.57,ends:[{x:-5.12,y:-0.94,z:-1.57},{x:-2.48,y:-4.58,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:-0.69,y:-5.17,z:-1.57},{x:3.59,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-1.50,z:-1.57},{x:4.70,y:1.50,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:3.59,y:3.77,z:-1.57},{x:-0.69,y:5.17,z:-1.57}]},{id:21,x:-3.80,y:2.76,z:-1.57,ends:[{x:-2.48,y:4.58,z:-1.57},{x:-5.12,y:0.94,z:-1.57}]},{id:22,x:0,y:-2.25,z:-2.21,ends:[{x:-2.25,y:-2.25,z:-2.21},{x:2.25,y:-2.25,z:-2.21}]},{id:23,x:0,y:2.25,z:-2.21,ends:[{x:2.25,y:2.25,z:-2.21},{x:-2.25,y:2.25,z:-2.21}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:2.25,y:0,z:-2.40},{x:-2.25,y:0,z:-2.40}]}],
-            22: [{id:1,x:-9.20,y:0,z:1.15,ends:[{x:-9.20,y:2.25,z:1.15},{x:-9.20,y:-2.25,z:1.15}]},{id:2,x:-6.51,y:-6.51,z:1.15,ends:[{x:-8.10,y:-4.91,z:1.15},{x:-4.91,y:-8.10,z:1.15}]},{id:3,x:0,y:-9.20,z:1.15,ends:[{x:-2.25,y:-9.20,z:1.15},{x:2.25,y:-9.20,z:1.15}]},{id:4,x:6.51,y:-6.51,z:1.15,ends:[{x:4.91,y:-8.10,z:1.15},{x:8.10,y:-4.91,z:1.15}]},{id:5,x:9.20,y:0,z:1.15,ends:[{x:9.20,y:-2.25,z:1.15},{x:9.20,y:2.25,z:1.15}]},{id:6,x:6.51,y:6.51,z:1.15,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:9.20,z:1.15,ends:[{x:2.25,y:9.20,z:1.15},{x:-2.25,y:9.20,z:1.15}]},{id:8,x:-6.51,y:6.51,z:1.15,ends:[{x:-4.91,y:8.10,z:1.15},{x:-8.10,y:4.91,z:1.15}]},{id:9,x:-7.19,y:-1.27,z:-0.29,ends:[{x:-7.58,y:0.95,z:-0.29},{x:-6.80,y:-3.48,z:-0.29}]},{id:10,x:-2.50,y:-6.86,z:-0.29,ends:[{x:-4.61,y:-6.09,z:-0.29},{x:-0.38,y:-7.63,z:-0.29}]},{id:11,x:4.69,y:-5.59,z:-0.29,ends:[{x:2.97,y:-7.04,z:-0.29},{x:6.42,y:-4.15,z:-0.29}]},{id:12,x:7.19,y:1.27,z:-0.29,ends:[{x:7.58,y:-0.95,z:-0.29},{x:6.80,y:3.48,z:-0.29}]},{id:13,x:2.50,y:6.86,z:-0.29,ends:[{x:4.61,y:6.09,z:-0.29},{x:0.38,y:7.63,z:-0.29}]},{id:14,x:-4.69,y:5.59,z:-0.29,ends:[{x:-2.97,y:7.04,z:-0.29},{x:-6.42,y:4.15,z:-0.29}]},{id:15,x:-3.09,y:-3.68,z:-1.53,ends:[{x:-4.81,y:-2.23,z:-1.53},{x:-1.36,y:-5.12,z:-1.53}]},{id:16,x:3.68,y:-3.09,z:-1.53,ends:[{x:2.23,y:-4.81,z:-1.53},{x:5.12,y:-1.36,z:-1.53}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0.20,y:-2.24,z:-2.21,ends:[{x:-2.05,y:-2.44,z:-2.21},{x:2.44,y:-2.05,z:-2.21}]},{id:20,x:-0.20,y:2.24,z:-2.21,ends:[{x:2.05,y:2.44,z:-2.21},{x:-2.44,y:2.05,z:-2.21}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:2.24,y:0.20,z:-2.40},{x:-2.24,y:-0.20,z:-2.40}]}]
+            20: [{id:1,x:-8.15,y:-2.97,z:0.70,ends:[{x:-8.67,y:-1.56,z:0.70},{x:-7.64,y:-4.38,z:0.70}]},{id:2,x:-4.34,y:-7.51,z:0.70,ends:[{x:-5.64,y:-6.76,z:0.70},{x:-3.04,y:-8.26,z:0.70}]},{id:3,x:1.51,y:-8.55,z:0.70,ends:[{x:0.03,y:-8.81,z:0.70},{x:2.98,y:-8.29,z:0.70}]},{id:4,x:6.65,y:-5.58,z:0.70,ends:[{x:5.68,y:-6.73,z:0.70},{x:7.61,y:-4.43,z:0.70}]},{id:5,x:8.68,y:0,z:0.70,ends:[{x:8.68,y:-1.50,z:0.70},{x:8.68,y:1.50,z:0.70}]},{id:6,x:6.65,y:5.53,z:0.70,ends:[{x:7.61,y:4.43,z:0.70},{x:5.68,y:6.73,z:0.70}]},{id:7,x:1.51,y:8.55,z:0.70,ends:[{x:2.98,y:8.29,z:0.70},{x:0.03,y:8.81,z:0.70}]},{id:8,x:-4.34,y:7.51,z:0.70,ends:[{x:-3.04,y:8.26,z:0.70},{x:-5.64,y:6.76,z:0.70}]},{id:9,x:-8.15,y:2.97,z:0.70,ends:[{x:-7.64,y:4.38,z:0.70},{x:-8.67,y:1.56,z:0.70}]},{id:10,x:-6.62,y:-1.29,z:-0.62,ends:[{x:-6.91,y:0.19,z:-0.62},{x:-6.34,y:-2.76,z:-0.62}]},{id:11,x:-3.17,y:-5.96,z:-0.62,ends:[{x:-4.49,y:-5.25,z:-0.62},{x:-1.84,y:-6.66,z:-0.62}]},{id:12,x:2.74,y:-6.16,z:-0.62,ends:[{x:1.37,y:-6.77,z:-0.62},{x:4.11,y:-5.55,z:-0.62}]},{id:13,x:6.52,y:-1.75,z:-0.62,ends:[{x:6.13,y:-3.19,z:-0.62},{x:6.90,y:-0.30,z:-0.62}]},{id:14,x:5.46,y:3.97,z:-0.62,ends:[{x:6.34,y:2.75,z:-0.62},{x:4.58,y:5.18,z:-0.62}]},{id:15,x:0.24,y:6.74,z:-0.62,ends:[{x:1.73,y:6.69,z:-0.62},{x:-1.26,y:6.79,z:-0.62}]},{id:16,x:-5.09,y:4.43,z:-0.62,ends:[{x:-4.11,y:5.56,z:-0.62},{x:-6.08,y:3.29,z:-0.62}]},{id:17,x:-3.79,y:-2.75,z:-1.57,ends:[{x:-4.67,y:-1.54,z:-1.57},{x:-2.91,y:-3.97,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:0.02,y:-4.92,z:-1.57},{x:2.87,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-1.50,z:-1.57},{x:4.70,y:1.50,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:2.87,y:3.99,z:-1.57},{x:0.02,y:4.92,z:-1.57}]},{id:21,x:-3.79,y:2.76,z:-1.57,ends:[{x:-2.91,y:3.97,z:-1.57},{x:-4.67,y:1.54,z:-1.57}]},{id:22,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:23,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            22: [{id:1,x:-8.99,y:0,z:0.96,ends:[{x:-8.99,y:1.50,z:0.96},{x:-8.99,y:-1.50,z:0.96}]},{id:2,x:-6.36,y:-6.36,z:0.96,ends:[{x:-7.42,y:-5.29,z:0.96},{x:-5.29,y:-7.42,z:0.96}]},{id:3,x:0,y:-8.99,z:0.96,ends:[{x:-1.50,y:-8.99,z:0.96},{x:1.50,y:-8.99,z:0.96}]},{id:4,x:6.36,y:-6.36,z:0.96,ends:[{x:5.29,y:-7.42,z:0.96},{x:7.42,y:-5.29,z:0.96}]},{id:5,x:8.99,y:0,z:0.96,ends:[{x:8.99,y:-1.50,z:0.96},{x:8.99,y:1.50,z:0.96}]},{id:6,x:6.36,y:6.36,z:0.96,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:8.99,z:0.96,ends:[{x:1.50,y:8.99,z:0.96},{x:-1.50,y:8.99,z:0.96}]},{id:8,x:-6.36,y:6.36,z:0.96,ends:[{x:-5.29,y:7.42,z:0.96},{x:-7.42,y:5.29,z:0.96}]},{id:9,x:-7.07,y:-1.12,z:-0.38,ends:[{x:-7.30,y:0.36,z:-0.38},{x:-6.84,y:-2.60,z:-0.38}]},{id:10,x:-2.91,y:-6.54,z:-0.38,ends:[{x:-4.28,y:-5.93,z:-0.38},{x:-1.54,y:-7.15,z:-0.38}]},{id:11,x:4.41,y:-5.64,z:-0.38,ends:[{x:3.23,y:-6.56,z:-0.38},{x:5.59,y:-4.72,z:-0.38}]},{id:12,x:7.13,y:0.62,z:-0.38,ends:[{x:7.26,y:-0.87,z:-0.38},{x:7.00,y:2.12,z:-0.38}]},{id:13,x:3.25,y:6.38,z:-0.38,ends:[{x:4.59,y:5.70,z:-0.38},{x:1.91,y:7.06,z:-0.38}]},{id:14,x:-4.60,y:5.48,z:-0.38,ends:[{x:-3.45,y:6.45,z:-0.38},{x:-5.75,y:4.52,z:-0.38}]},{id:15,x:-3.31,y:-3.31,z:-1.57,ends:[{x:-4.37,y:-2.25,z:-1.57},{x:-2.25,y:-4.37,z:-1.57}]},{id:16,x:3.31,y:-3.31,z:-1.57,ends:[{x:2.25,y:-4.37,z:-1.57},{x:4.37,y:-2.25,z:-1.57}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:20,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}]
         };
 
         const PS_DATA = {
             10: [{id:1,x:-2.03,y:-2.03,z:-2.10,ends:[{x:-3.09,y:-0.97,z:-2.10},{x:-0.97,y:-3.09,z:-2.10}]},{id:2,x:2.03,y:-2.03,z:-2.10,ends:[{x:0.97,y:-3.09,z:-2.10},{x:3.09,y:-0.97,z:-2.10}]},{id:3,x:2.03,y:2.03,z:-2.10,ends:[{x:3.09,y:0.97,z:-2.10},{x:0.97,y:3.09,z:-2.10}]},{id:4,x:-2.03,y:2.03,z:-2.10,ends:[{x:-0.97,y:3.09,z:-2.10},{x:-3.09,y:0.97,z:-2.10}]},{id:5,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
             12: [{id:1,x:-3.79,y:-2.75,z:-1.57,ends:[{x:-4.67,y:-1.54,z:-1.57},{x:-2.91,y:-3.97,z:-1.57}]},{id:2,x:1.45,y:-4.46,z:-1.57,ends:[{x:0.02,y:-4.92,z:-1.57},{x:2.87,y:-3.99,z:-1.57}]},{id:3,x:4.69,y:0,z:-1.57,ends:[{x:4.69,y:-1.50,z:-1.57},{x:4.69,y:1.50,z:-1.57}]},{id:4,x:1.45,y:4.46,z:-1.57,ends:[{x:2.87,y:3.99,z:-1.57},{x:0.02,y:4.92,z:-1.57}]},{id:5,x:-3.79,y:2.75,z:-1.57,ends:[{x:-2.91,y:3.97,z:-1.57},{x:-4.67,y:1.54,z:-1.57}]},{id:6,x:0,y:-2.85,z:-2.10,ends:[{x:-1.50,y:-2.85,z:-2.10},{x:1.50,y:-2.85,z:-2.10}]},{id:7,x:0,y:2.85,z:-2.10,ends:[{x:1.50,y:2.85,z:-2.10},{x:-1.50,y:2.85,z:-2.10}]},{id:8,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
-            14: [{id:1,x:-6.01,y:0,z:-1.01,ends:[{x:-6.01,y:1.50,z:-1.01},{x:-6.01,y:-1.50,z:-1.01}]},{id:2,x:-3.00,y:-5.20,z:-1.01,ends:[{x:-4.30,y:-4.45,z:-1.01},{x:-1.70,y:-5.95,z:-1.01}]},{id:3,x:3.00,y:-5.20,z:-1.01,ends:[{x:1.70,y:-5.95,z:-1.01},{x:4.30,y:-4.45,z:-1.01}]},{id:4,x:6.01,y:0,z:-1.01,ends:[{x:6.01,y:-1.50,z:-1.01},{x:6.01,y:1.50,z:-1.01}]},{id:5,x:3.00,y:5.20,z:-1.01,ends:[{x:4.30,y:4.45,z:-1.01},{x:1.70,y:5.95,z:-1.01}]},{id:6,x:-3.00,y:5.20,z:-1.01,ends:[{x:-1.70,y:5.95,z:-1.01},{x:-4.30,y:4.45,z:-1.01}]},{id:7,x:-4.01,y:0,z:-1.80,ends:[{x:-4.01,y:1.50,z:-1.80},{x:-4.01,y:-1.50,z:-1.80}]},{id:8,x:0,y:-4.01,z:-1.80,ends:[{x:-1.50,y:-4.01,z:-1.80},{x:1.50,y:-4.01,z:-1.80}]},{id:9,x:4.01,y:0,z:-1.80,ends:[{x:4.01,y:-1.50,z:-1.80},{x:4.01,y:1.50,z:-1.80}]},{id:10,x:0,y:4.01,z:-1.80,ends:[{x:1.50,y:4.01,z:-1.80},{x:-1.50,y:4.01,z:-1.80}]},{id:11,x:0,y:-1.91,z:-2.27,ends:[{x:-1.50,y:-1.91,z:-2.27},{x:1.50,y:-1.91,z:-2.27}]},{id:12,x:0,y:1.91,z:-2.27,ends:[{x:1.50,y:1.91,z:-2.27},{x:-1.50,y:1.91,z:-2.27}]},{id:13,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
+            14: [{id:1,x:-6.01,y:0,z:-1.01,ends:[{x:-6.01,y:1.50,z:-1.01},{x:-6.01,y:-1.50,z:-1.01}]},{id:2,x:-3.00,y:-5.20,z:-1.01,ends:[{x:-4.30,y:-4.45,z:-1.01},{x:-1.70,y:-5.95,z:-1.01}]},{id:3,x:3.00,y:-5.20,z:-1.01,ends:[{x:1.70,y:-5.95,z:-1.01},{x:4.30,y:-4.45,z:-1.01}]},{id:4,x:6.01,y:0,z:-1.01,ends:[{x:6.01,y:-1.50,z:-1.01},{x:6.01,y:1.50,z:-1.01}]},{id:5,x:3.00,y:5.20,z:-1.01,ends:[{x:4.30,y:4.45,z:-1.01},{x:1.70,y:5.95,z:-1.01}]},{id:6,x:-3.00,y:5.20,z:-1.01,ends:[{x:-1.70,y:5.95,z:-1.01},{x:-4.30,y:4.45,z:-1.01}]},{id:7,x:-4.01,y:0,z:-1.80,ends:[{x:-4.01,y:1.50,z:-1.80},{x:-4.01,y:-1.50,z:-1.80}]},{id:8,x:0,y:-4.01,z:-1.80,ends:[{x:-1.50,y:-4.01,z:-1.80},{x:1.50,y:-4.01,z:-1.80}]},{id:9,x:4.01,y:0,z:-1.80,ends:[{x:4.01,y:-1.50,z:-1.80},{x:4.01,y:1.50,z:-1.80}]},{id:10,x:0,y:4.01,z:-1.80,ends:[{x:1.50,y:4.01,z:-1.80},{x:-1.50,y:4.01,z:-1.80}]},{id:11,x:0,y:-1.91,z:-2.27,ends:[{x:-1.50,y:-1.91,z:-2.27},{x:1.50,y:-1.91,z:-2.27}]},{id:12,x:0,y:2.10,z:-2.24,ends:[{x:2.25,y:2.10,z:-2.24},{x:-2.25,y:2.10,z:-2.24}]},{id:13,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
             16: [{id:1,x:-5.78,y:-2.82,z:-0.80,ends:[{x:-6.44,y:-1.47,z:-0.80},{x:-5.12,y:-4.17,z:-0.80}]},{id:2,x:-1.45,y:-6.27,z:-0.80,ends:[{x:-2.91,y:-5.93,z:-0.80},{x:0.01,y:-6.60,z:-0.80}]},{id:3,x:4.05,y:-5.00,z:-0.80,ends:[{x:2.88,y:-5.94,z:-0.80},{x:5.21,y:-4.05,z:-0.80}]},{id:4,x:6.43,y:0,z:-0.80,ends:[{x:6.43,y:-1.50,z:-0.80},{x:6.43,y:1.50,z:-0.80}]},{id:5,x:4.05,y:5.00,z:-0.80,ends:[{x:5.21,y:4.05,z:-0.80},{x:2.88,y:5.94,z:-0.80}]},{id:6,x:-1.45,y:6.27,z:-0.80,ends:[{x:0.01,y:6.60,z:-0.80},{x:-2.91,y:5.93,z:-0.80}]},{id:7,x:-5.78,y:2.82,z:-0.80,ends:[{x:-5.12,y:4.17,z:-0.80},{x:-6.44,y:1.47,z:-0.80}]},{id:8,x:-4.46,y:0,z:-1.65,ends:[{x:-4.46,y:1.50,z:-1.65},{x:-4.46,y:-1.50,z:-1.65}]},{id:9,x:0,y:-4.46,z:-1.65,ends:[{x:-1.50,y:-4.46,z:-1.65},{x:1.50,y:-4.46,z:-1.65}]},{id:10,x:4.46,y:0,z:-1.65,ends:[{x:4.46,y:-1.50,z:-1.65},{x:4.46,y:1.50,z:-1.65}]},{id:11,x:0,y:4.46,z:-1.65,ends:[{x:1.50,y:4.46,z:-1.65},{x:-1.50,y:4.46,z:-1.65}]},{id:12,x:0,y:-1.67,z:-2.30,ends:[{x:-1.50,y:-1.67,z:-2.30},{x:1.50,y:-1.67,z:-2.30}]},{id:13,x:0,y:1.67,z:-2.30,ends:[{x:1.50,y:1.67,z:-2.30},{x:-1.50,y:1.67,z:-2.30}]}],
             18: [{id:1,x:-7.86,y:0,z:0.08,ends:[{x:-7.86,y:1.50,z:0.08},{x:-7.86,y:-1.50,z:0.08}]},{id:2,x:-5.56,y:-5.56,z:0.08,ends:[{x:-6.62,y:-4.50,z:0.08},{x:-4.50,y:-6.62,z:0.08}]},{id:3,x:0,y:-7.86,z:0.08,ends:[{x:-1.50,y:-7.86,z:0.08},{x:1.50,y:-7.86,z:0.08}]},{id:4,x:5.56,y:-5.56,z:0.08,ends:[{x:4.50,y:-6.62,z:0.08},{x:6.62,y:-4.50,z:0.08}]},{id:5,x:7.86,y:0,z:0.08,ends:[{x:7.86,y:-1.50,z:0.08},{x:7.86,y:1.50,z:0.08}]},{id:6,x:5.56,y:5.56,z:0.08,ends:[{x:6.62,y:4.50,z:0.08},{x:4.50,y:6.62,z:0.08}]},{id:7,x:0,y:7.86,z:0.08,ends:[{x:1.50,y:7.86,z:0.08},{x:-1.50,y:7.86,z:0.08}]},{id:8,x:-5.56,y:5.56,z:0.08,ends:[{x:-4.50,y:6.62,z:0.08},{x:-6.62,y:4.50,z:0.08}]},{id:9,x:-6.01,y:0,z:-1.01,ends:[{x:-6.01,y:1.50,z:-1.01},{x:-6.01,y:-1.50,z:-1.01}]},{id:10,x:-3.00,y:-5.20,z:-1.01,ends:[{x:-4.30,y:-4.45,z:-1.01},{x:-1.70,y:-5.95,z:-1.01}]},{id:11,x:3.00,y:-5.20,z:-1.01,ends:[{x:1.70,y:-5.95,z:-1.01},{x:4.30,y:-4.45,z:-1.01}]},{id:12,x:6.01,y:0,z:-1.01,ends:[{x:6.01,y:-1.50,z:-1.01},{x:6.01,y:1.50,z:-1.01}]},{id:13,x:3.00,y:5.20,z:-1.01,ends:[{x:4.30,y:4.45,z:-1.01},{x:1.70,y:5.95,z:-1.01}]},{id:14,x:-3.00,y:5.20,z:-1.01,ends:[{x:-1.70,y:5.95,z:-1.01},{x:-4.30,y:4.45,z:-1.01}]},{id:15,x:-2.99,y:-2.99,z:-1.73,ends:[{x:-4.05,y:-1.93,z:-1.73},{x:-1.93,y:-4.05,z:-1.73}]},{id:16,x:2.99,y:-2.99,z:-1.73,ends:[{x:1.93,y:-4.05,z:-1.73},{x:4.05,y:-1.93,z:-1.73}]},{id:17,x:2.99,y:2.99,z:-1.73,ends:[{x:4.05,y:1.93,z:-1.73},{x:1.93,y:4.05,z:-1.73}]},{id:18,x:-2.99,y:2.99,z:-1.73,ends:[{x:-1.93,y:4.05,z:-1.73},{x:-4.05,y:1.93,z:-1.73}]},{id:19,x:0,y:-1.91,z:-2.27,ends:[{x:-1.50,y:-1.91,z:-2.27},{x:1.50,y:-1.91,z:-2.27}]},{id:20,x:0,y:1.91,z:-2.27,ends:[{x:1.50,y:1.91,z:-2.27},{x:-1.50,y:1.91,z:-2.27}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
             20: [{id:1,x:-8.15,y:-2.97,z:0.70,ends:[{x:-8.67,y:-1.56,z:0.70},{x:-7.64,y:-4.38,z:0.70}]},{id:2,x:-4.34,y:-7.51,z:0.70,ends:[{x:-5.64,y:-6.76,z:0.70},{x:-3.04,y:-8.26,z:0.70}]},{id:3,x:1.51,y:-8.55,z:0.70,ends:[{x:0.03,y:-8.81,z:0.70},{x:2.98,y:-8.29,z:0.70}]},{id:4,x:6.65,y:-5.58,z:0.70,ends:[{x:5.68,y:-6.73,z:0.70},{x:7.61,y:-4.43,z:0.70}]},{id:5,x:8.68,y:0,z:0.70,ends:[{x:8.68,y:-1.50,z:0.70},{x:8.68,y:1.50,z:0.70}]},{id:6,x:6.65,y:5.53,z:0.70,ends:[{x:7.61,y:4.43,z:0.70},{x:5.68,y:6.73,z:0.70}]},{id:7,x:1.51,y:8.55,z:0.70,ends:[{x:2.98,y:8.29,z:0.70},{x:0.03,y:8.81,z:0.70}]},{id:8,x:-4.34,y:7.51,z:0.70,ends:[{x:-3.04,y:8.26,z:0.70},{x:-5.64,y:6.76,z:0.70}]},{id:9,x:-8.15,y:2.97,z:0.70,ends:[{x:-7.64,y:4.38,z:0.70},{x:-8.67,y:1.56,z:0.70}]},{id:10,x:-6.62,y:-1.29,z:-0.62,ends:[{x:-6.91,y:0.19,z:-0.62},{x:-6.34,y:-2.76,z:-0.62}]},{id:11,x:-3.17,y:-5.96,z:-0.62,ends:[{x:-4.49,y:-5.25,z:-0.62},{x:-1.84,y:-6.66,z:-0.62}]},{id:12,x:2.74,y:-6.16,z:-0.62,ends:[{x:1.37,y:-6.77,z:-0.62},{x:4.11,y:-5.55,z:-0.62}]},{id:13,x:6.52,y:-1.75,z:-0.62,ends:[{x:6.13,y:-3.19,z:-0.62},{x:6.90,y:-0.30,z:-0.62}]},{id:14,x:5.46,y:3.97,z:-0.62,ends:[{x:6.34,y:2.75,z:-0.62},{x:4.58,y:5.18,z:-0.62}]},{id:15,x:0.24,y:6.74,z:-0.62,ends:[{x:1.73,y:6.69,z:-0.62},{x:-1.26,y:6.79,z:-0.62}]},{id:16,x:-5.09,y:4.43,z:-0.62,ends:[{x:-4.11,y:5.56,z:-0.62},{x:-6.08,y:3.29,z:-0.62}]},{id:17,x:-3.79,y:-2.75,z:-1.57,ends:[{x:-4.67,y:-1.54,z:-1.57},{x:-2.91,y:-3.97,z:-1.57}]},{id:18,x:1.45,y:-4.47,z:-1.57,ends:[{x:0.02,y:-4.92,z:-1.57},{x:2.87,y:-3.77,z:-1.57}]},{id:19,x:4.70,y:0,z:-1.57,ends:[{x:4.70,y:-1.50,z:-1.57},{x:4.70,y:1.50,z:-1.57}]},{id:20,x:1.45,y:4.47,z:-1.57,ends:[{x:2.87,y:3.99,z:-1.57},{x:0.02,y:4.92,z:-1.57}]},{id:21,x:-3.79,y:2.76,z:-1.57,ends:[{x:-2.91,y:3.97,z:-1.57},{x:-4.67,y:1.54,z:-1.57}]},{id:22,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:23,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:24,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}],
-            22: [{id:1,x:-8.99,y:0,z:0.96,ends:[{x:-8.99,y:1.50,z:0.96},{x:-8.99,y:-1.50,z:0.96}]},{id:2,x:-6.36,y:-6.36,z:0.96,ends:[{x:-7.42,y:-5.29,z:0.96},{x:-5.29,y:-7.42,z:0.96}]},{id:3,x:0,y:-8.99,z:0.96,ends:[{x:-1.50,y:-8.99,z:0.96},{x:1.50,y:-8.99,z:0.96}]},{id:4,x:6.36,y:-6.36,z:0.96,ends:[{x:5.29,y:-7.42,z:0.96},{x:7.42,y:-5.29,z:0.96}]},{id:5,x:8.99,y:0,z:0.96,ends:[{x:8.99,y:-1.50,z:0.96},{x:8.99,y:1.50,z:0.96}]},{id:6,x:6.36,y:6.36,z:0.96,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:8.99,z:0.96,ends:[{x:1.50,y:8.99,z:0.96},{x:-1.50,y:8.99,z:0.96}]},{id:8,x:-6.36,y:6.36,z:0.96,ends:[{x:-5.29,y:7.42,z:0.96},{x:-7.42,y:5.29,z:0.96}]},{id:9,x:-7.07,y:-1.12,z:-0.38,ends:[{x:-7.30,y:0.36,z:-0.38},{x:-6.84,y:-2.60,z:-0.38}]},{id:10,x:-2.91,y:-6.54,z:-0.38,ends:[{x:-4.28,y:-5.93,z:-0.38},{x:-1.54,y:-7.15,z:-0.38}]},{id:11,x:4.41,y:-5.64,z:-0.38,ends:[{x:3.23,y:-6.56,z:-0.38},{x:5.59,y:-4.72,z:-0.38}]},{id:12,x:7.13,y:0.62,z:-0.38,ends:[{x:7.26,y:-0.87,z:-0.38},{x:7.00,y:2.12,z:-0.38}]},{id:13,x:3.25,y:6.38,z:-0.38,ends:[{x:4.59,y:5.70,z:-0.38},{x:1.91,y:7.06,z:-0.38}]},{id:14,x:-4.60,y:5.48,z:-0.38,ends:[{x:-3.45,y:6.45,z:-0.38},{x:-5.75,y:4.52,z:-0.38}]},{id:15,x:-3.31,y:-3.31,z:-1.57,ends:[{x:-4.37,y:-2.25,z:-1.57},{x:-2.25,y:-4.37,z:-1.57}]},{id:16,x:3.31,y:-3.31,z:-1.57,ends:[{x:2.25,y:-4.37,z:-1.57},{x:4.37,y:-2.25,z:-1.57}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:20,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}]
+            22: [{id:1,x:-8.99,y:0,z:0.96,ends:[{x:-8.99,y:1.50,z:0.96},{x:-8.99,y:-1.50,z:0.96}]},{id:2,x:-6.36,y:-6.36,z:0.96,ends:[{x:-7.42,y:-5.29,z:0.96},{x:-5.29,y:-7.42,z:0.96}]},{id:3,x:0,y:-8.99,z:0.96,ends:[{x:-1.50,y:-8.99,z:0.96},{x:1.50,y:-8.99,z:0.96}]},{id:4,x:6.36,y:-6.36,z:0.96,ends:[{x:5.29,y:-7.42,z:0.96},{x:7.42,y:5.29,z:0.96}]},{id:5,x:8.99,y:0,z:0.96,ends:[{x:8.99,y:-1.50,z:0.96},{x:8.99,y:1.50,z:0.96}]},{id:6,x:6.36,y:6.36,z:0.96,ends:[{x:7.42,y:5.29,z:0.96},{x:5.29,y:7.42,z:0.96}]},{id:7,x:0,y:8.99,z:0.96,ends:[{x:1.50,y:8.99,z:0.96},{x:-1.50,y:8.99,z:0.96}]},{id:8,x:-6.36,y:6.36,z:0.96,ends:[{x:-5.29,y:7.42,z:0.96},{x:-7.42,y:5.29,z:0.96}]},{id:9,x:-7.07,y:-1.12,z:-0.38,ends:[{x:-7.30,y:0.36,z:-0.38},{x:-6.84,y:-2.60,z:-0.38}]},{id:10,x:-2.91,y:-6.54,z:-0.38,ends:[{x:-4.28,y:-5.93,z:-0.38},{x:-1.54,y:-7.15,z:-0.38}]},{id:11,x:4.41,y:-5.64,z:-0.38,ends:[{x:3.23,y:-6.56,z:-0.38},{x:5.59,y:-4.72,z:-0.38}]},{id:12,x:7.13,y:0.62,z:-0.38,ends:[{x:7.26,y:-0.87,z:-0.38},{x:7.00,y:2.12,z:-0.38}]},{id:13,x:3.25,y:6.38,z:-0.38,ends:[{x:4.59,y:5.70,z:-0.38},{x:1.91,y:7.06,z:-0.38}]},{id:14,x:-4.60,y:5.48,z:-0.38,ends:[{x:-3.45,y:6.45,z:-0.38},{x:-5.75,y:4.52,z:-0.38}]},{id:15,x:-3.31,y:-3.31,z:-1.57,ends:[{x:-4.37,y:-2.25,z:-1.57},{x:-2.25,y:-4.37,z:-1.57}]},{id:16,x:3.31,y:-3.31,z:-1.57,ends:[{x:2.25,y:-4.37,z:-1.57},{x:4.37,y:-2.25,z:-1.57}]},{id:17,x:3.31,y:3.31,z:-1.57,ends:[{x:4.37,y:2.25,z:-1.57},{x:2.25,y:4.37,z:-1.57}]},{id:18,x:-3.31,y:3.31,z:-1.57,ends:[{x:-2.25,y:4.37,z:-1.57},{x:-4.37,y:2.25,z:-1.57}]},{id:19,x:0,y:-2.14,z:-2.23,ends:[{x:-1.50,y:-2.14,z:-2.23},{x:1.50,y:-2.14,z:-2.23}]},{id:20,x:0,y:2.14,z:-2.23,ends:[{x:1.50,y:2.14,z:-2.23},{x:-1.50,y:2.14,z:-2.23}]},{id:21,x:0,y:0,z:-2.40,ends:[{x:-1.50,y:0,z:-2.40},{x:1.50,y:0,z:-2.40}]}]
         };
 
         // --- APP STATE ---
         const state = {
             size: 16, isNotched: false, model: 'line', dataset: 'ps',
             inputMode: 'duration', duration: 101.0, tumorHeight: 5.0, seedActivity: 0.00, showTable: false,
-            calcDriver: 'dose', targetDose: 85.0,
+            calcDriver: 'dose', targetDose: 85.0, lockActivity: false,
             tpsValues: { ext_sclera: 0, sclera: 0, coms_5mm: 0, eye_origin: 0, opp_retina: 0, rx: 0 },
             activeTab: 'plaque', rotation: 0, results: {}
         };
 
         let viewport = { scale: 12.0, offset: {x: 0, y: 0}, isDragging: false, last: {x:0, y:0} };
-        let doseGrid = null, cachedPaths = null;
+        let doseGrid = null, cachedPaths = null, zoomTimeout = null;
         const GRID_SIZE = 50, VIEW_X_RANGE = [-15, 15], VIEW_Z_RANGE = [-5, 25];
         let el = {};
 
-        // --- PHYSICS ---
+        // --- PHYSICS CORE ---
         function calculate_g(r, isPoint) {
             const data = isPoint ? G_TABLE.point : G_TABLE.line;
             if (r <= G_TABLE.r[0]) return data[0];
@@ -391,6 +393,7 @@
 
         const G_REF_L = (function(){ const r=1, t=Math.PI/2, L=0.3; return (Math.atan(L/(2*r)) - Math.atan(-L/(2*r))) / (L*r); })();
 
+        // --- CALCULATIONS ---
         function calculateAll() {
             if (!el.doseRx || state.duration < 0) return;
             const lambda = Math.LN2 / (ISOTOPE_CONSTANTS.HalfLife * 24.0);
@@ -410,11 +413,11 @@
                 rx_geom_sum += (ISOTOPE_CONSTANTS.Lambda * (G / gref) * g * F);
             });
 
-            if (state.calcDriver === 'dose') {
+            if (state.lockActivity || state.calcDriver === 'activity') {
+                state.seedActivity = Math.max(0, parseFloat(el.seedActivity.value) || 0);
+            } else {
                 state.seedActivity = (df > 0 && rx_geom_sum > 0) ? (state.targetDose * 100.0) / (rx_geom_sum * df) : 0;
                 el.seedActivity.value = state.seedActivity.toFixed(3);
-            } else {
-                state.seedActivity = Math.max(0, parseFloat(el.seedActivity.value) || 0);
             }
 
             const pts_coords = { ext_sclera: { x: 0, y: 0, z: -0.1 }, sclera: { x: 0, y: 0, z: 0 }, coms_5mm: { x: 0, y: 0, z: 0.5 }, eye_origin: { x: 0, y: 0, z: 1.1 }, opp_retina: { x: 0, y: 0, z: 2.2 }, rx: { x: 0, y: 0, z: state.tumorHeight / 10 } };
@@ -432,9 +435,14 @@
                 res[k] = dose;
             }
             state.results = res;
-            if (state.calcDriver === 'activity') { state.targetDose = res.rx; el.targetDoseInput.value = res.rx.toFixed(1); }
+            if (state.lockActivity || state.calcDriver === 'activity') { state.targetDose = res.rx; el.targetDoseInput.value = res.rx.toFixed(1); }
             el.doseRx.textContent = res.rx.toFixed(2);
             el.doseRxLabel.textContent = `(${state.tumorHeight}mm)`;
+            
+            // Sync decay Correction Display
+            el.decayFactorDisplay.textContent = df.toFixed(3) + ' h';
+            el.dateModeDurationDisplay.textContent = state.duration.toFixed(1) + ' h';
+
             updateTableDisplay(res);
             renderPhysicsTable(active, pts_coords.rx, gref, df, isPoint);
             if (state.activeTab === 'plaque') drawPlaque();
@@ -475,12 +483,12 @@
                         const d1 = doseGrid[x1][y1], d2 = doseGrid[x2][y1], d3 = doseGrid[x2][y2], d4 = doseGrid[x1][y2];
                         const toW = (idxX, idxZ) => ({ x: VIEW_X_RANGE[0]+(idxX/GRID_SIZE)*(VIEW_X_RANGE[1]-VIEW_X_RANGE[0]), z: VIEW_Z_RANGE[0]+(idxZ/GRID_SIZE)*(VIEW_Z_RANGE[1]-VIEW_Z_RANGE[0]) });
                         const interp = (p1, p2, v1, v2) => p1 + (lvl.val - v1) * (p2 - p1) / (v2 - v1);
-                        const lines = [];
-                        if ((d1 < lvl.val) !== (d2 < lvl.val)) lines.push(toW(interp(x1, x2, d1, d2), y1));
-                        if ((d2 < lvl.val) !== (d3 < lvl.val)) lines.push(toW(x2, interp(y1, y2, d2, d3)));
-                        if ((d3 < lvl.val) !== (d4 < lvl.val)) lines.push(toW(interp(x2, x1, d3, d4), y2));
-                        if ((d4 < lvl.val) !== (d1 < lvl.val)) lines.push(toW(x1, interp(y2, y1, d4, d1)));
-                        if (lines.length >= 2) { path.moveTo(lines[0].x, lines[0].z); for (let k=1; k<lines.length; k++) path.lineTo(lines[k].x, lines[k].z); }
+                        const pts = [];
+                        if ((d1 < lvl.val) !== (d2 < lvl.val)) pts.push(toW(interp(x1, x2, d1, d2), y1));
+                        if ((d2 < lvl.val) !== (d3 < lvl.val)) pts.push(toW(x2, interp(y1, y2, d2, d3)));
+                        if ((d3 < lvl.val) !== (d4 < lvl.val)) pts.push(toW(interp(x2, x1, d3, d4), y2));
+                        if ((d4 < lvl.val) !== (d1 < lvl.val)) pts.push(toW(x1, interp(y2, y1, d4, d1)));
+                        if (pts.length >= 2) { path.moveTo(pts[0].x, pts[0].z); for (let k=1; k<pts.length; k++) path.lineTo(pts[k].x, pts[k].z); }
                     }
                 }
                 cachedPaths.push({ path, color: lvl.color });
@@ -493,40 +501,53 @@
             ctx.clearRect(0, 0, w, h);
             ctx.save();
             ctx.translate(w/2 + viewport.offset.x, h/2 + viewport.offset.y);
-            ctx.scale(viewport.scale, -viewport.scale); // Flip Z for up
-            ctx.translate(0, -11); // Center on eye center
+            ctx.scale(viewport.scale, -viewport.scale); 
+            ctx.translate(0, -11); 
             
             const visW = w/viewport.scale, visH = h/viewport.scale;
             const bMinX = -visW, bMaxX = visW, bMinZ = -visH+11, bMaxZ = visH+11;
 
-            // Grids
+            // Grid
             ctx.lineWidth = 1/viewport.scale;
-            ctx.strokeStyle = '#f1f5f9'; ctx.beginPath(); for(let x=Math.floor(bMinX);x<=Math.ceil(bMaxX);x++) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ);z<=Math.ceil(bMaxZ);z++) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
-            ctx.strokeStyle = '#e2e8f0'; ctx.beginPath(); for(let x=Math.floor(bMinX/10)*10;x<=Math.ceil(bMaxX/10)*10;x+=10) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ/10)*10;z<=Math.ceil(bMaxZ/10)*10;z+=10) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+            ctx.strokeStyle = '#f8fafc'; ctx.beginPath(); for(let x=Math.floor(bMinX);x<=Math.ceil(bMaxX);x++) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ);z<=Math.ceil(bMaxZ);z++) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+            ctx.strokeStyle = '#f1f5f9'; ctx.beginPath(); for(let x=Math.floor(bMinX/10)*10;x<=Math.ceil(bMaxX/10)*10;x+=10) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ/10)*10;z<=Math.ceil(bMaxZ/10)*10;z+=10) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
 
-            // Black Axes
+            // Axes
             ctx.strokeStyle = '#000000'; ctx.lineWidth = 1.5/viewport.scale; ctx.beginPath(); ctx.moveTo(0,bMinZ); ctx.lineTo(0,bMaxZ); ctx.moveTo(bMinX,0); ctx.lineTo(bMaxX,0); ctx.stroke();
-            
-            // Ticks
             ctx.fillStyle = '#000000'; ctx.font = `bold ${10/viewport.scale}px sans-serif`;
             for (let v=-30; v<=30; v+=5) {
                 if (v===0) continue;
-                ctx.beginPath(); ctx.moveTo(v, -2/viewport.scale); ctx.lineTo(v, 2/viewport.scale); ctx.stroke(); // X
-                ctx.beginPath(); ctx.moveTo(-2/viewport.scale, v); ctx.lineTo(2/viewport.scale, v); ctx.stroke(); // Z
+                ctx.beginPath(); ctx.moveTo(v, -2/viewport.scale); ctx.lineTo(v, 2/viewport.scale); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-2/viewport.scale, v); ctx.lineTo(2/viewport.scale, v); ctx.stroke();
                 ctx.save(); ctx.scale(1,-1); ctx.textAlign='center'; ctx.fillText(v.toString(), v, 12/viewport.scale); ctx.textAlign='right'; ctx.fillText(v.toString(), -5/viewport.scale, -v+3/viewport.scale); ctx.restore();
             }
             ctx.save(); ctx.scale(1,-1); ctx.fillStyle='#64748b'; ctx.fillText("mm", 15/viewport.scale, -20/viewport.scale); ctx.restore();
 
-            // Anatomy (Transparent)
+            // Anatomy
             ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1/viewport.scale; ctx.beginPath(); ctx.arc(0,11,12,0,2*Math.PI); ctx.stroke(); ctx.beginPath(); ctx.arc(0,11,11,0,2*Math.PI); ctx.stroke();
-            ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 3/viewport.scale; ctx.beginPath(); const arcLen = (state.size/2)/12; ctx.arc(0,11,12.2,-Math.PI/2-arcLen,-Math.PI/2+arcLen); ctx.stroke();
+            
+            // Vertically Cropped Plaque (Vertical Ends Algorithm)
+            const r_inner = 12.0; const total_thickness = 2.75; const r_outer = r_inner + total_thickness;
+            const halfSize = state.size / 2;
+            
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.4)'; ctx.strokeStyle = 'rgba(184, 134, 11, 0.6)'; ctx.lineWidth = 1.5/viewport.scale;
+            const shellPath = new Path2D();
+            
+            const angIn = Math.asin(halfSize / r_inner);
+            const angOut = Math.asin(halfSize / r_outer);
+            
+            shellPath.arc(0, 11, r_inner, -Math.PI/2 - angIn, -Math.PI/2 + angIn, false);
+            shellPath.lineTo(halfSize, 11 - Math.sqrt(r_outer**2 - halfSize**2));
+            shellPath.arc(0, 11, r_outer, -Math.PI/2 + angOut, -Math.PI/2 - angOut, true);
+            shellPath.closePath();
+            ctx.fill(shellPath); ctx.stroke(shellPath);
 
             // Isodoses
             ctx.lineWidth = 2/viewport.scale; if (cachedPaths) cachedPaths.forEach(cp => { ctx.strokeStyle = cp.color; ctx.stroke(cp.path); });
 
             // Ref Points
-            const refPts = [{z:-1},{z:0},{z:5},{z:11},{z:22},{z:state.tumorHeight}];
-            ctx.fillStyle = '#334155'; refPts.forEach(pt => { ctx.beginPath(); ctx.arc(0, pt.z, 0.4, 0, 2*Math.PI); ctx.fill(); });
+            const refs = [{z:-1},{z:0},{z:5},{z:11},{z:22},{z:state.tumorHeight}];
+            ctx.fillStyle = '#334155'; refs.forEach(pt => { ctx.beginPath(); ctx.arc(0, pt.z, 0.4, 0, 2*Math.PI); ctx.fill(); });
             
             // Rx Arrow
             const ax = 2.5; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5/viewport.scale; ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,state.tumorHeight); ctx.stroke();
@@ -536,31 +557,59 @@
             ctx.restore();
         }
 
-        function setupCanvasInteraction() {
-            const canvas = el.canvasDose, tooltip = document.getElementById('canvas-tooltip');
-            canvas.addEventListener('wheel', e => { e.preventDefault(); const factor = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.1); viewport.scale *= factor; requestAnimationFrame(renderDoseCanvas); });
-            canvas.addEventListener('mousedown', e => { viewport.isDragging = true; viewport.last = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; });
-            window.addEventListener('mouseup', () => { viewport.isDragging = false; canvas.style.cursor = 'move'; });
+        function setupInteraction() {
+            const canvas = el.canvasDose, tooltip = document.getElementById('global-tooltip');
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // Middle button panning only
+            canvas.addEventListener('mousedown', e => { 
+                if (e.button === 1) { viewport.isDragging = true; viewport.last = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; e.preventDefault(); }
+            });
+            window.addEventListener('mouseup', () => { viewport.isDragging = false; canvas.style.cursor = 'default'; tooltip.style.display = 'none'; });
+
+            canvas.addEventListener('wheel', e => { 
+                e.preventDefault(); 
+                const rect = canvas.getBoundingClientRect(), mx = e.clientX-rect.left, my = e.clientY-rect.top;
+                const factor = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.1);
+                const cx = canvas.width/2 + viewport.offset.x, cy = canvas.height/2 + viewport.offset.y;
+                const wx = (mx - cx) / viewport.scale, wz = (my - cy) / viewport.scale;
+                viewport.scale *= factor;
+                viewport.offset.x = mx - canvas.width/2 - wx * viewport.scale;
+                viewport.offset.y = my - canvas.height/2 - wz * viewport.scale;
+                requestAnimationFrame(renderDoseCanvas); 
+                if (zoomTimeout) clearTimeout(zoomTimeout);
+                zoomTimeout = setTimeout(calculateAll, 200);
+            });
+
             canvas.addEventListener('mousemove', e => {
                 if (viewport.isDragging) { viewport.offset.x += e.clientX-viewport.last.x; viewport.offset.y += e.clientY-viewport.last.y; viewport.last = { x: e.clientX, y: e.clientY }; requestAnimationFrame(renderDoseCanvas); }
+                
                 const rect = canvas.getBoundingClientRect(), mx = e.clientX-rect.left, my = e.clientY-rect.top;
-                tooltip.style.left = (mx + 12) + 'px'; tooltip.style.top = (my + 12) + 'px';
                 const cx = canvas.width/2 + viewport.offset.x, cy = canvas.height/2 + viewport.offset.y;
                 const wx = (mx-cx)/viewport.scale, wz = -((my-cy)/viewport.scale)+11;
-                const refs = [-1,0,5,11,22,state.tumorHeight]; let found = null;
-                for (let z of refs) { if (Math.sqrt(wx*wx+(wz-z)**2) < 1.0) { found = z; break; } }
+                const pts = [-1,0,5,11,22,state.tumorHeight]; let found = null;
+                for (let z of pts) { if (Math.sqrt(wx*wx+(wz-z)**2) < 1.0) { found = z; break; } }
+                
                 if (found !== null && state.results) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = e.clientX + 'px';
+                    tooltip.style.top = e.clientY + 'px';
                     let v = 0; if(Math.abs(found-(-1))<0.1) v=state.results.ext_sclera; else if(Math.abs(found-0)<0.1) v=state.results.sclera; else if(Math.abs(found-5)<0.1) v=state.results.coms_5mm; else if(Math.abs(found-11)<0.1) v=state.results.eye_origin; else if(Math.abs(found-22)<0.1) v=state.results.opp_retina; else v=state.results.rx;
-                    tooltip.style.display = 'block'; tooltip.innerHTML = `<strong>Z = ${found.toFixed(1)} mm</strong><br>Dose: ${v.toFixed(2)} Gy`;
-                } else { tooltip.style.display = 'none'; }
+                    tooltip.innerHTML = `<strong>Z = ${found.toFixed(1)} mm</strong><br>Dose: ${v.toFixed(2)} Gy`;
+                } else tooltip.style.display = 'none';
+            });
+
+            document.querySelectorAll('.activity-helper').forEach(item => {
+                item.addEventListener('mouseenter', () => { tooltip.style.display = 'block'; tooltip.innerHTML = 'Lock U/seed'; });
+                item.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+                item.addEventListener('mousemove', (e) => { tooltip.style.left = e.clientX + 'px'; tooltip.style.top = e.clientY + 'px'; });
             });
         }
 
-        // --- UTILS ---
         function updateTableDisplay(results) {
             const pts = [{ id: 'ext_sclera', name: 'External Sclera (-1mm)' }, { id: 'sclera', name: 'Inner Sclera (0mm)' }, { id: 'coms_5mm', name: 'COMS Reference (5mm)' }, { id: 'eye_origin', name: 'Eye Origin (11mm)' }, { id: 'opp_retina', name: 'Opposite Retina (22mm)' }, { id: 'rx', name: 'Rx Point' }];
             el.comparisonRows.innerHTML = pts.map(pt => `<tr class="hover:bg-green-100/30 transition-colors"><td class="py-1.5 px-1 text-[11px] font-semibold text-gray-700 leading-tight">${pt.name}</td><td class="py-1.5 px-1 text-[14px] font-mono font-semibold text-right text-gray-800" id="comp-calc-${pt.id}">${results[pt.id].toFixed(2)}</td><td class="py-1.5 px-1 text-center"><input type="text" value="${state.tpsValues[pt.id] || ''}" class="w-16 text-right p-0.5 text-[13px] font-mono font-bold border border-green-200 rounded bg-white focus:ring-1 focus:ring-green-400 outline-none tps-input" data-id="${pt.id}"></td><td class="py-1.5 px-1 text-right text-[12px] font-black" id="comp-diff-${pt.id}">${calculateError(results[pt.id], state.tpsValues[pt.id])}</td></tr>`).join('');
-            document.querySelectorAll('.tps-input').forEach(i => i.addEventListener('input', e => { const id = e.target.dataset.id; state.tpsValues[id] = parseFloat(e.target.value) || 0; document.getElementById(`comp-diff-${id}`).innerHTML = calculateError(parseFloat(document.getElementById(`comp-calc-${id}`).textContent), state.tpsValues[id]); }));
+            document.querySelectorAll('.tps-input').forEach(i => i.addEventListener('input', e => { const id = e.target.dataset.id; state.tpsValues[id] = parseFloat(e.target.value) || 0; const calc = parseFloat(document.getElementById(`comp-calc-${id}`).textContent); document.getElementById(`comp-diff-${id}`).innerHTML = calculateError(calc, state.tpsValues[id]); }));
         }
 
         function calculateError(calc, tps) { if (tps > 0) { const diff = ((calc-tps)/tps)*100; return `<span class="${Math.abs(diff)<=5 ? 'text-green-600' : 'text-red-600'}">${(diff>0?"+":"")+diff.toFixed(1)}%</span>`; } return '<span class="text-gray-400">-</span>'; }
@@ -610,40 +659,63 @@
             } else if (state.model === 'point') { ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill(); }
         }
 
+        function formatToLocalDateTime(date) {
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
         function setInputMode(m) {
             state.inputMode = m;
             if (m === 'duration') { el.modeContentDuration.classList.remove('hidden'); el.modeContentDates.classList.add('hidden'); el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none"; el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none"; }
-            else { el.modeContentDuration.classList.add('hidden'); el.modeContentDates.classList.remove('hidden'); el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none"; el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none"; if(el.implantDate.value && state.duration>=0){const end=new Date(new Date(el.implantDate.value).getTime()+state.duration*3600000); el.removalDate.value=end.toISOString().slice(0,16);} }
+            else { 
+                el.modeContentDuration.classList.add('hidden'); el.modeContentDates.classList.remove('hidden'); 
+                el.btnModeDates.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none"; 
+                el.btnModeDuration.className = "flex-1 py-1.5 text-xs font-bold uppercase text-blue-400 hover:text-blue-600 border-b-2 border-transparent focus:outline-none"; 
+                syncDatesFromDuration(); 
+            }
+        }
+
+        function syncDatesFromDuration() {
+            if (el.implantDate.value && state.duration >= 0) {
+                const start = new Date(el.implantDate.value);
+                const end = new Date(start.getTime() + state.duration * 3600000);
+                el.removalDate.value = formatToLocalDateTime(end);
+            }
         }
 
         function switchLayout(mode) {
             const colR = document.getElementById('col-results'), colV = document.getElementById('col-vis');
             if (mode === 'dose') { colR.classList.add('hidden'); colV.classList.replace('lg:col-span-3', 'lg:col-span-7'); document.getElementById('view-plaque').classList.add('hidden'); document.getElementById('view-dose').classList.remove('hidden'); }
             else { colR.classList.remove('hidden'); colV.classList.replace('lg:col-span-7', 'lg:col-span-3'); document.getElementById('view-plaque').classList.remove('hidden'); document.getElementById('view-dose').classList.add('hidden'); }
-            setTimeout(() => { const w = document.getElementById('dose-canvas-wrapper'); el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; calculateAll(); }, 50);
+            setTimeout(() => { const w = document.getElementById('dose-canvas-wrapper'); if(w) { el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; calculateAll(); } }, 50);
         }
 
         function init() {
             el = {
-                btnModeDuration: document.getElementById('btn-mode-duration'), btnModeDates: document.getElementById('btn-mode-dates'), modeContentDuration: document.getElementById('mode-content-duration'), modeContentDates: document.getElementById('mode-content-dates'),
-                manualDuration: document.getElementById('manualDuration'), dateModeDurationDisplay: document.getElementById('dateModeDurationDisplay'), implantDate: document.getElementById('implantDate'), removalDate: document.getElementById('removalDate'),
-                decayFactorDisplay: document.getElementById('decayFactorDisplay'), seedActivity: document.getElementById('seedActivity'), targetDoseInput: document.getElementById('targetDoseInput'), btnReset: document.getElementById('btn-reset'),
-                tumorHeight: document.getElementById('tumorHeight'), plaqueSize: document.getElementById('plaqueSize'), radioNotched: document.getElementById('radioNotched'), labelNotched: document.getElementById('labelNotched'),
-                doseRx: document.getElementById('dose-rx'), doseRxLabel: document.getElementById('dose-rx-label'), toggleTableBtn: document.getElementById('toggleTableBtn'), tableContainer: document.getElementById('detailedTableContainer'),
-                tableBody: document.getElementById('detailedTableBody'), tableTotal: document.getElementById('detailedTableTotal'), canvasPlaque: document.getElementById('plaqueCanvas'), canvasDose: document.getElementById('doseCanvas'),
-                comparisonRows: document.getElementById('comparison-rows'), plaqueDescLabel: document.getElementById('plaque-desc-label'), tabPlaque: document.getElementById('tab-plaque'), tabDose: document.getElementById('tab-dose'),
-                rotateCw: document.getElementById('rotate-cw'), rotateCcw: document.getElementById('rotate-ccw'), rotationDisplay: document.getElementById('rotation-val')
+                btnModeDuration: document.getElementById('btn-mode-duration'), btnModeDates: document.getElementById('btn-mode-dates'), modeContentDuration: document.getElementById('mode-content-duration'), modeContentDates: document.getElementById('mode-content-dates'), manualDuration: document.getElementById('manualDuration'), dateModeDurationDisplay: document.getElementById('dateModeDurationDisplay'), implantDate: document.getElementById('implantDate'), removalDate: document.getElementById('removalDate'), decayFactorDisplay: document.getElementById('decayFactorDisplay'), seedActivity: document.getElementById('seedActivity'), targetDoseInput: document.getElementById('targetDoseInput'), btnReset: document.getElementById('btn-reset'), tumorHeight: document.getElementById('tumorHeight'), plaqueSize: document.getElementById('plaqueSize'), radioNotched: document.getElementById('radioNotched'), labelNotched: document.getElementById('labelNotched'), doseRx: document.getElementById('dose-rx'), doseRxLabel: document.getElementById('dose-rx-label'), toggleTableBtn: document.getElementById('toggleTableBtn'), tableContainer: document.getElementById('detailedTableContainer'), tableBody: document.getElementById('detailedTableBody'), tableTotal: document.getElementById('detailedTableTotal'), canvasPlaque: document.getElementById('plaqueCanvas'), canvasDose: document.getElementById('doseCanvas'), comparisonRows: document.getElementById('comparison-rows'), plaqueDescLabel: document.getElementById('plaque-desc-label'), tabPlaque: document.getElementById('tab-plaque'), tabDose: document.getElementById('tab-dose'), rotateCw: document.getElementById('rotate-cw'), rotateCcw: document.getElementById('rotate-ccw'), rotationDisplay: document.getElementById('rotation-val'), lockActivity: document.getElementById('lockActivity')
             };
-
-            const now = new Date(), d = (now.getDay()===0?-6:1-now.getDay())+21; const target = new Date(now.getFullYear(), now.getMonth(), now.getDate()+d); el.implantDate.value = target.toISOString().slice(0,10)+"T08:30";
+            
+            const now = new Date(); 
+            const d = (now.getDay() === 0 ? 1 : 8 - now.getDay()) + 14; 
+            const target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d); 
+            target.setHours(8, 30, 0, 0);
+            el.implantDate.value = formatToLocalDateTime(target);
+            syncDatesFromDuration();
+            
             el.btnModeDuration.addEventListener('click', () => setInputMode('duration')); el.btnModeDates.addEventListener('click', () => setInputMode('dates'));
-            el.manualDuration.addEventListener('input', e => { state.duration = parseFloat(e.target.value) || 0; calculateAll(); });
+            el.manualDuration.addEventListener('input', e => { state.duration = parseFloat(e.target.value) || 0; syncDatesFromDuration(); calculateAll(); });
             el.implantDate.addEventListener('input', () => { if(el.implantDate.value && el.removalDate.value){ state.duration = (new Date(el.removalDate.value)-new Date(el.implantDate.value))/3600000; el.manualDuration.value = state.duration.toFixed(1); calculateAll(); } });
             el.removalDate.addEventListener('input', () => { if(el.implantDate.value && el.removalDate.value){ state.duration = (new Date(el.removalDate.value)-new Date(el.implantDate.value))/3600000; el.manualDuration.value = state.duration.toFixed(1); calculateAll(); } });
             el.seedActivity.addEventListener('input', () => { state.calcDriver = 'activity'; calculateAll(); });
             el.targetDoseInput.addEventListener('input', e => { state.calcDriver = 'dose'; state.targetDose = parseFloat(e.target.value) || 0; calculateAll(); });
             el.tumorHeight.addEventListener('input', e => { state.tumorHeight = parseFloat(e.target.value) || 0; calculateAll(); });
-            el.plaqueSize.addEventListener('change', e => { state.size = parseInt(e.target.value); calculateAll(); });
+            el.lockActivity.addEventListener('change', e => { state.lockActivity = e.target.checked; calculateAll(); });
+            el.plaqueSize.addEventListener('change', e => { 
+                state.size = parseInt(e.target.value); 
+                if (state.size === 10) { state.isNotched = false; el.radioNotched.disabled = true; el.radioNotched.checked = false; document.querySelector('input[name=\"shape\"][value=\"round\"]').checked = true; el.labelNotched.classList.add('opacity-50'); } 
+                else { el.radioNotched.disabled = false; el.labelNotched.classList.remove('opacity-50'); }
+                calculateAll(); 
+            });
             el.btnReset.addEventListener('click', () => location.reload());
             document.getElementsByName('shape').forEach(r => r.addEventListener('change', e => { state.isNotched = (e.target.value === 'notched'); calculateAll(); }));
             document.getElementsByName('modelType').forEach(r => r.addEventListener('change', e => { state.model = e.target.value; calculateAll(); }));
@@ -653,9 +725,8 @@
             el.rotateCw.addEventListener('click', () => { state.rotation = (state.rotation + 10) % 360; el.rotationDisplay.textContent = state.rotation + "°"; calculateAll(); });
             el.rotateCcw.addEventListener('click', () => { state.rotation = (state.rotation - 10 + 360) % 360; el.rotationDisplay.textContent = state.rotation + "°"; calculateAll(); });
             el.toggleTableBtn.addEventListener('click', () => { state.showTable = !state.showTable; el.tableContainer.classList.toggle('hidden'); el.toggleTableBtn.textContent = state.showTable ? "Hide Detailed Physics Check" : "Show Detailed Physics Check"; });
-
-            setupCanvasInteraction(); calculateAll();
-            window.addEventListener('resize', () => { if(state.activeTab === 'dose'){ const w = document.getElementById('dose-canvas-wrapper'); el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; requestAnimationFrame(renderDoseCanvas); } });
+            setupInteraction(); calculateAll();
+            window.addEventListener('resize', () => { if(state.activeTab === 'dose'){ const w = document.getElementById('dose-canvas-wrapper'); if(w) { el.canvasDose.width = w.clientWidth; el.canvasDose.height = w.clientHeight; requestAnimationFrame(renderDoseCanvas); } } });
         }
         window.onload = init;
     </script>
