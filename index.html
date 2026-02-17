@@ -54,7 +54,6 @@
                 <span style="color: #FFCB05;">COMS Eye Plaque Physics 2nd Check Calculator</span>
             </h2>
             <p class="text-sm text-white/60 font-bold tracking-normal">TG-43 2nd Check (IsoAid IAI-125A)</p>
-
         </div>
 
         <!-- Main Content Layout -->
@@ -62,7 +61,6 @@
 
             <!-- COLUMN 1: INPUTS -->
             <div class="lg:col-span-3 flex flex-col space-y-4">
-                <!-- Schedule Container -->
                 <div class="bg-blue-50 rounded-lg border border-blue-100 overflow-hidden flex flex-col h-[210px] shadow-sm shrink-0">
                     <div class="flex border-b border-blue-200 bg-blue-100/50 shrink-0">
                         <button id="btn-mode-duration" class="flex-1 py-1.5 text-xs font-bold uppercase text-blue-900 bg-blue-50 border-b-2 border-blue-600 focus:outline-none">Duration</button>
@@ -99,7 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Parameters Panel -->
                 <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex-1">
                     <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
                         <h3 class="text-xs font-bold text-gray-800 uppercase">Parameters</h3>
@@ -157,18 +154,18 @@
                             <label class="block text-[12px] font-semibold text-gray-600 mb-1">Calculation Model</label>
                             <div class="grid grid-cols-2 gap-2 mt-0.5">
                                 <div class="bg-gray-50 px-2 py-1.5 rounded-md border border-gray-100">
-                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                    <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
                                         <input type="radio" name="modelType" value="line" checked class="text-blue-600"> Line Source
                                     </label>
-                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                    <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
                                         <input type="radio" name="modelType" value="point" class="text-blue-600"> Point Source
                                     </label>
                                 </div>
                                 <div class="bg-gray-50 px-2 py-1.5 rounded-md border border-gray-100">
-                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                    <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
                                         <input type="radio" name="coordDataset" value="ps" checked class="text-blue-600"> Plaque Simulator
                                     </label>
-                                    <label class="text-[11px] flex items-center gap-1.5 cursor-pointer">
+                                    <label class="text-[12px] flex items-center gap-1.5 cursor-pointer">
                                         <input type="radio" name="coordDataset" value="tg129" class="text-blue-600"> TG-129
                                     </label>
                                 </div>
@@ -262,7 +259,6 @@
 
         </div>
 
-        <!-- Detailed Table -->
         <div id="detailedTableContainer" class="hidden mt-6 border rounded-lg overflow-hidden shadow-md">
             <div class="bg-gray-100 px-4 py-3 border-b">
                 <h3 class="text-sm font-bold text-gray-700">Detailed Physics Check: Rx Point</h3>
@@ -295,7 +291,7 @@
         </div>
 
         <div class="text-[11px] text-white/60 text-center pt-4">
-            * <strong>NOT FOR CLINICL TREATMENT PLANNING | EDUCATION PURPOSE ONLY</strong>
+            * <strong>NOT FOR CLINICAL TREATMENT PLANNING | EDUCATION PURPOSE ONLY</strong>
         </div>
 
     </div>
@@ -489,12 +485,12 @@
                         const d1 = doseGrid[x1][y1], d2 = doseGrid[x2][y1], d3 = doseGrid[x2][y2], d4 = doseGrid[x1][y2];
                         const toW = (idxX, idxZ) => ({ x: VIEW_X_RANGE[0]+(idxX/GRID_SIZE)*(VIEW_X_RANGE[1]-VIEW_X_RANGE[0]), z: VIEW_Z_RANGE[0]+(idxZ/GRID_SIZE)*(VIEW_Z_RANGE[1]-VIEW_Z_RANGE[0]) });
                         const interp = (p1, p2, v1, v2) => p1 + (lvl.val - v1) * (p2 - p1) / (v2 - v1);
-                        const pts = [];
-                        if ((d1 < lvl.val) !== (d2 < lvl.val)) pts.push(toW(interp(x1, x2, d1, d2), y1));
-                        if ((d2 < lvl.val) !== (d3 < lvl.val)) pts.push(toW(x2, interp(y1, y2, d2, d3)));
-                        if ((d3 < lvl.val) !== (d4 < lvl.val)) pts.push(toW(interp(x2, x1, d3, d4), y2));
-                        if ((d4 < lvl.val) !== (d1 < lvl.val)) pts.push(toW(x1, interp(y2, y1, d4, d1)));
-                        if (pts.length >= 2) { path.moveTo(pts[0].x, pts[0].z); for (let k=1; k<pts.length; k++) path.lineTo(pts[k].x, pts[k].z); }
+                        const points = [];
+                        if ((d1 < lvl.val) !== (d2 < lvl.val)) points.push(toW(interp(x1, x2, d1, d2), y1));
+                        if ((d2 < lvl.val) !== (d3 < lvl.val)) points.push(toW(x2, interp(y1, y2, d2, d3)));
+                        if ((d3 < lvl.val) !== (d4 < lvl.val)) points.push(toW(interp(x2, x1, d3, d4), y2));
+                        if ((d4 < lvl.val) !== (d1 < lvl.val)) points.push(toW(x1, interp(y2, y1, d4, d1)));
+                        if (points.length >= 2) { path.moveTo(points[0].x, points[0].z); for (let k=1; k<points.length; k++) path.lineTo(points[k].x, points[k].z); }
                     }
                 }
                 cachedPaths.push({ path, color: lvl.color });
@@ -510,13 +506,18 @@
             ctx.scale(viewport.scale, -viewport.scale); 
             ctx.translate(0, -11); 
             
-            const visW = w/viewport.scale, visH = h/viewport.scale;
-            const bMinX = -visW, bMaxX = visW, bMinZ = -visH+11, bMaxZ = visH+11;
+            // Re-calculate bounds for grid based on actual visible rectangle in world space
+            const cx = w/2 + viewport.offset.x;
+            const cy = h/2 + viewport.offset.y;
+            const bMinX = (0 - cx) / viewport.scale;
+            const bMaxX = (w - cx) / viewport.scale;
+            const bMinZ = -((h - cy) / viewport.scale) + 11;
+            const bMaxZ = -((0 - cy) / viewport.scale) + 11;
 
-            // Grid
+            // Grid (User-Modified Colors)
             ctx.lineWidth = 1/viewport.scale;
-            ctx.strokeStyle = '#f8fafc'; ctx.beginPath(); for(let x=Math.floor(bMinX);x<=Math.ceil(bMaxX);x++) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ);z<=Math.ceil(bMaxZ);z++) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
-            ctx.strokeStyle = '#f1f5f9'; ctx.beginPath(); for(let x=Math.floor(bMinX/10)*10;x<=Math.ceil(bMaxX/10)*10;x+=10) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ/10)*10;z<=Math.ceil(bMaxZ/10)*10;z+=10) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+            ctx.strokeStyle = '#EDF0F2'; ctx.beginPath(); for(let x=Math.floor(bMinX);x<=Math.ceil(bMaxX);x++) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ);z<=Math.ceil(bMaxZ);z++) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
+            ctx.strokeStyle = '#C7C9C9'; ctx.beginPath(); for(let x=Math.floor(bMinX/10)*10;x<=Math.ceil(bMaxX/10)*10;x+=10) {ctx.moveTo(x,bMinZ);ctx.lineTo(x,bMaxZ);} for(let z=Math.floor(bMinZ/10)*10;z<=Math.ceil(bMaxZ/10)*10;z+=10) {ctx.moveTo(bMinX,z);ctx.lineTo(bMaxX,z);} ctx.stroke();
 
             // Axes
             ctx.strokeStyle = '#000000'; ctx.lineWidth = 1.5/viewport.scale; ctx.beginPath(); ctx.moveTo(0,bMinZ); ctx.lineTo(0,bMaxZ); ctx.moveTo(bMinX,0); ctx.lineTo(bMaxX,0); ctx.stroke();
@@ -552,10 +553,16 @@
             const refs = [{z:-1},{z:0},{z:5},{z:11},{z:22},{z:state.tumorHeight}];
             ctx.fillStyle = '#334155'; refs.forEach(pt => { ctx.beginPath(); ctx.arc(0, pt.z, 0.4, 0, 2*Math.PI); ctx.fill(); });
             
-            // Rx Arrow (Blue and Thicker)
-            const ax = 0; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2.5/viewport.scale; ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,state.tumorHeight); ctx.stroke();
-            const hs = 1.4; ctx.beginPath(); ctx.moveTo(ax-hs/2,state.tumorHeight-hs); ctx.lineTo(ax,state.tumorHeight); ctx.lineTo(ax+hs/2,state.tumorHeight-hs); ctx.moveTo(ax-hs/2,hs); ctx.lineTo(ax,0); ctx.lineTo(ax+hs/2,hs); ctx.stroke();
-            ctx.save(); ctx.scale(1,-1); ctx.textAlign='left'; ctx.fillStyle='#3b82f6'; ctx.font=`bold ${11/viewport.scale}px sans-serif`; ctx.fillText(`${state.tumorHeight.toFixed(1)} mm`, ax+2/viewport.scale, -state.tumorHeight/2+3/viewport.scale); ctx.restore();
+            // Rx Arrow (Refined Blue Thicker Arrow with Solid Tip)
+            const ax = 0; ctx.strokeStyle = '#3b82f6'; ctx.fillStyle = '#3b82f6'; ctx.lineWidth = 3.0/viewport.scale; 
+            ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,state.tumorHeight); ctx.stroke();
+            const hs = 0.7; // Keep hs=1 as modified by user
+            // Tip at tumorHeight
+            ctx.beginPath(); ctx.moveTo(ax, state.tumorHeight); ctx.lineTo(ax-hs/2, state.tumorHeight-hs); ctx.lineTo(ax+hs/2, state.tumorHeight-hs); ctx.fill();
+            // Tip at 0
+            ctx.beginPath(); ctx.moveTo(ax, 0); ctx.lineTo(ax-hs/2, hs); ctx.lineTo(ax+hs/2, hs); ctx.fill();
+            
+            ctx.save(); ctx.scale(1,-1); ctx.textAlign='left'; ctx.fillStyle='#0000FF'; ctx.font=`bold ${16/viewport.scale}px sans-serif`; ctx.fillText(` Rx Depth:${state.tumorHeight.toFixed(1)} mm`, ax+2/viewport.scale, -state.tumorHeight/2+3/viewport.scale); ctx.restore();
             
             ctx.restore();
         }
@@ -742,9 +749,9 @@
                     el.lockActivity.checked = false;
                     state.calcDriver = 'dose';
                 } else if (!state.lockActivity) {
-                    // Fallback to dose if both unchecked
                     state.lockDose = true;
                     el.lockDose.checked = true;
+                    state.calcDriver = 'dose';
                 }
                 calculateAll();
             });
@@ -756,9 +763,9 @@
                     el.lockDose.checked = false;
                     state.calcDriver = 'activity';
                 } else if (!state.lockDose) {
-                    // Fallback to dose if both unchecked
                     state.lockDose = true;
                     el.lockDose.checked = true;
+                    state.calcDriver = 'dose';
                 }
                 calculateAll(); 
             });
@@ -791,5 +798,3 @@
     </script>
 </body>
 </html>
-
-
